@@ -3,11 +3,16 @@ from keras.models import load_model
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
-
-from util import classify, set_background
 import joblib
+from util import classify, set_background
+
+# Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
 scaler = joblib.load('scaler.pkl')
+
+# Load CNN model
+cnn_model = load_model('breastcancerclassone.h5')
+
 # Function to highlight the gray range
 def highlight_gray_range(image_np, gray_lower, gray_upper):
     mask = (image_np >= gray_lower) & (image_np <= gray_upper)
@@ -65,59 +70,74 @@ if uploaded_file is not None:
     # Show the plot
     st.pyplot(fig)
 
+    # Preprocess the image for the CNN model
+    image_resized = image.resize((224, 224))  # Resize to the input size the CNN expects
+    image_array = np.array(image_resized).reshape((1, 224, 224, 1)) / 255.0  # Normalize the image
+
+    # Make a prediction using the CNN model
+    cnn_prediction = cnn_model.predict(image_array)
+    cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+    cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+
+    # Display the CNN prediction result
+    st.write(f'CNN Prediction: {cnn_result}')
+    st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
+
 set_background('bgs/bg5.jpg')
 
-# set title
-st.title('Breast Cancer classification')
+# Set title
+st.title('Breast Cancer Classification')
 
-
+# Text inputs for breast cancer prediction parameters
 st.title('Breast Cancer Prediction Parameters Input')
 
 # Create text inputs for each parameter
-mean_radius = st.text_input('Mean Radius')
-mean_texture = st.text_input('Mean Texture')
-mean_perimeter = st.text_input('Mean Perimeter')
-mean_area = st.text_input('Mean Area')
-mean_smoothness = st.text_input('Mean Smoothness')
-mean_compactness = st.text_input('Mean Compactness')
-mean_concavity = st.text_input('Mean Concavity')
-mean_concave_points = st.text_input('Mean Concave Points')
-mean_symmetry = st.text_input('Mean Symmetry')
-mean_fractal_dimension = st.text_input('Mean Fractal Dimension')
-radius_error = st.text_input('Radius Error')
-texture_error = st.text_input('Texture Error')
-perimeter_error = st.text_input('Perimeter Error')
-area_error = st.text_input('Area Error')
-smoothness_error = st.text_input('Smoothness Error')
-compactness_error = st.text_input('Compactness Error')
-concavity_error = st.text_input('Concavity Error')
-concave_points_error = st.text_input('Concave Points Error')
-symmetry_error = st.text_input('Symmetry Error')
-fractal_dimension_error = st.text_input('Fractal Dimension Error')
-worst_radius = st.text_input('Worst Radius')
-worst_texture = st.text_input('Worst Texture')
-worst_perimeter = st.text_input('Worst Perimeter')
-worst_area = st.text_input('Worst Area')
-worst_smoothness = st.text_input('Worst Smoothness')
-worst_compactness = st.text_input('Worst Compactness')
-worst_concavity = st.text_input('Worst Concavity')
-worst_concave_points = st.text_input('Worst Concave Points')
-worst_symmetry = st.text_input('Worst Symmetry')
-worst_fractal_dimension = st.text_input('Worst Fractal Dimension')
+parameters = {
+    'Mean Radius': st.text_input('Mean Radius'),
+    'Mean Texture': st.text_input('Mean Texture'),
+    'Mean Perimeter': st.text_input('Mean Perimeter'),
+    'Mean Area': st.text_input('Mean Area'),
+    'Mean Smoothness': st.text_input('Mean Smoothness'),
+    'Mean Compactness': st.text_input('Mean Compactness'),
+    'Mean Concavity': st.text_input('Mean Concavity'),
+    'Mean Concave Points': st.text_input('Mean Concave Points'),
+    'Mean Symmetry': st.text_input('Mean Symmetry'),
+    'Mean Fractal Dimension': st.text_input('Mean Fractal Dimension'),
+    'Radius Error': st.text_input('Radius Error'),
+    'Texture Error': st.text_input('Texture Error'),
+    'Perimeter Error': st.text_input('Perimeter Error'),
+    'Area Error': st.text_input('Area Error'),
+    'Smoothness Error': st.text_input('Smoothness Error'),
+    'Compactness Error': st.text_input('Compactness Error'),
+    'Concavity Error': st.text_input('Concavity Error'),
+    'Concave Points Error': st.text_input('Concave Points Error'),
+    'Symmetry Error': st.text_input('Symmetry Error'),
+    'Fractal Dimension Error': st.text_input('Fractal Dimension Error'),
+    'Worst Radius': st.text_input('Worst Radius'),
+    'Worst Texture': st.text_input('Worst Texture'),
+    'Worst Perimeter': st.text_input('Worst Perimeter'),
+    'Worst Area': st.text_input('Worst Area'),
+    'Worst Smoothness': st.text_input('Worst Smoothness'),
+    'Worst Compactness': st.text_input('Worst Compactness'),
+    'Worst Concavity': st.text_input('Worst Concavity'),
+    'Worst Concave Points': st.text_input('Worst Concave Points'),
+    'Worst Symmetry': st.text_input('Worst Symmetry'),
+    'Worst Fractal Dimension': st.text_input('Worst Fractal Dimension')
+}
 
 # Add a button to submit the data
 if st.button('Predict'):
     # Collect the entered data
     data = np.array([
-        mean_radius, mean_texture, mean_perimeter, mean_area, mean_smoothness, 
-        mean_compactness, mean_concavity, mean_concave_points, mean_symmetry, 
-        mean_fractal_dimension, radius_error, texture_error, perimeter_error, 
-        area_error, smoothness_error, compactness_error, concavity_error, 
-        concave_points_error, symmetry_error, fractal_dimension_error, worst_radius, 
-        worst_texture, worst_perimeter, worst_area, worst_smoothness, worst_compactness, 
-        worst_concavity, worst_concave_points, worst_symmetry, worst_fractal_dimension
+        parameters['Mean Radius'], parameters['Mean Texture'], parameters['Mean Perimeter'], parameters['Mean Area'], parameters['Mean Smoothness'],
+        parameters['Mean Compactness'], parameters['Mean Concavity'], parameters['Mean Concave Points'], parameters['Mean Symmetry'],
+        parameters['Mean Fractal Dimension'], parameters['Radius Error'], parameters['Texture Error'], parameters['Perimeter Error'],
+        parameters['Area Error'], parameters['Smoothness Error'], parameters['Compactness Error'], parameters['Concavity Error'],
+        parameters['Concave Points Error'], parameters['Symmetry Error'], parameters['Fractal Dimension Error'], parameters['Worst Radius'],
+        parameters['Worst Texture'], parameters['Worst Perimeter'], parameters['Worst Area'], parameters['Worst Smoothness'], parameters['Worst Compactness'],
+        parameters['Worst Concavity'], parameters['Worst Concave Points'], parameters['Worst Symmetry'], parameters['Worst Fractal Dimension']
     ], dtype=float).reshape(1, -1)
-    
+
     # Scale the input data
     data_scaled = scaler.transform(data)
     
@@ -127,5 +147,6 @@ if st.button('Predict'):
     
     # Display the result
     result = 'Malignant' if prediction[0] == 1 else 'Benign'
-    st.write(f'Prediction: {result}')
-    st.write(f'Prediction Probability: {prediction_proba[0]}')
+    st.write(f'KNN Prediction: {result}')
+    st.write(f'KNN Prediction Probability: {prediction_proba[0]}')
+
