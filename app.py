@@ -11,7 +11,7 @@ knn = joblib.load('knn_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
 # Load CNN model
-cnn_model = load_model('oneclass.h5')
+cnn_model = load_model(oneclass.h5)
 
 # Function to highlight the gray range
 def highlight_gray_range(image_np, gray_lower, gray_upper):
