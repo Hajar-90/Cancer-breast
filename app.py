@@ -1,5 +1,6 @@
 import streamlit as st
 from keras.models import load_model
+import tensorflow as tf
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,10 +14,10 @@ scaler = joblib.load('scaler.pkl')
 # Load CNN model with detailed error handling
 model_loaded = False
 try:
-    cnn_model = load_model('oneclass.h5')
+    cnn_model = tf.keras.models.load_model('oneclass.h5')
     model_loaded = True
 except FileNotFoundError:
-    st.error("CNN model file 'oneclass.h5' not found. Please upload the model file.")
+    st.error("CNN model file 'model' not found. Please upload the model file.")
 except TypeError as e:
     st.error(f"TypeError encountered: {e}")
 except Exception as e:
@@ -159,4 +160,5 @@ if st.button('Predict'):
     result = 'Malignant' if prediction[0] == 1 else 'Benign'
     st.write(f'KNN Prediction: {result}')
     st.write(f'KNN Prediction Probability: {prediction_proba[0]}')
+
 
