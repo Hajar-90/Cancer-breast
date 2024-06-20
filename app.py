@@ -10,8 +10,17 @@ from util import classify, set_background
 knn = joblib.load('knn_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
-# Load CNN model
-cnn_model = load_model('oneclass.h5')
+# Load CNN model with detailed error handling
+model_loaded = False
+try:
+    cnn_model = load_model('oneclass.h5')
+    model_loaded = True
+except FileNotFoundError:
+    st.error("CNN model file 'oneclass.h5' not found. Please upload the model file.")
+except TypeError as e:
+    st.error(f"TypeError encountered: {e}")
+except Exception as e:
+    st.error(f"An unexpected error occurred: {e}")
 
 # Function to highlight the gray range
 def highlight_gray_range(image_np, gray_lower, gray_upper):
@@ -70,18 +79,19 @@ if uploaded_file is not None:
     # Show the plot
     st.pyplot(fig)
 
-    # Preprocess the image for the CNN model
-    image_resized = image.resize((224, 224))  # Resize to the input size the CNN expects
-    image_array = np.array(image_resized).reshape((1, 224, 224, 1)) / 255.0  # Normalize the image
+    if model_loaded:
+        # Preprocess the image for the CNN model
+        image_resized = image.resize((224, 224))  # Resize to the input size the CNN expects
+        image_array = np.array(image_resized).reshape((1, 224, 224, 1)) / 255.0  # Normalize the image
 
-    # Make a prediction using the CNN model
-    cnn_prediction = cnn_model.predict(image_array)
-    cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-    cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+        # Make a prediction using the CNN model
+        cnn_prediction = cnn_model.predict(image_array)
+        cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+        cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
-    # Display the CNN prediction result
-    st.write(f'CNN Prediction: {cnn_result}')
-    st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
+        # Display the CNN prediction result
+        st.write(f'CNN Prediction: {cnn_result}')
+        st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
 
 set_background('bgs/bg5.jpg')
 
