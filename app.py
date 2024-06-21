@@ -36,7 +36,7 @@ file = st.file_uploader('', type=['jpeg', 'jpg', 'png', 'pgm'])
 
 # Load classifier
 try:
-    model = load_model('oneclass.h5')
+    model = load_model('oneclasso.keras')
     with open('labels.txt', 'r') as f:
         class_names = [a.strip().split(' ')[1] for a in f.readlines()]
 except FileNotFoundError:
