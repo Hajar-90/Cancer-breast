@@ -48,7 +48,7 @@ def load_model_safely(model_path):
         return None
 
 # Load the model
-model_path = 'oneclass.h5'
+model_path = 'oneclass.keras'
 model = load_model_safely(model_path)
 
 # Function to preprocess the image
