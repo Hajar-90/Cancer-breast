@@ -33,6 +33,10 @@ except Exception as e:
 
 # Function to preprocess the image
 def preprocess_image(image):
+    # Convert the image to RGB format if it has an alpha channel
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+    
     # Resize the image to match the input shape of the model
     img = image.resize((224, 224))
     # Convert the image to a numpy array
@@ -91,6 +95,7 @@ if uploaded_file is not None and model_loaded:
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
 
