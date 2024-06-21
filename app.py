@@ -1,179 +1,87 @@
 import streamlit as st
-from tensorflow.keras.models import load_model
-import tensorflow as tf
-from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
-import joblib
-from util import classify, set_background
+from tensorflow.keras.models import load_model
+from PIL import Image
 
-# Load KNN model and scaler
-knn = joblib.load('knn_model.pkl')
-scaler = joblib.load('scaler.pkl')
-
-# Custom function to load the model
+# Define a custom load_model function to handle BatchNormalization deserialization issue
 def custom_load_model(filepath):
     from tensorflow.keras.layers import BatchNormalization
+    import tensorflow as tf
 
     # Create a custom object scope that includes BatchNormalization
     custom_objects = {
         'BatchNormalization': BatchNormalization
     }
-    
+
     with tf.keras.utils.custom_object_scope(custom_objects):
         model = load_model(filepath)
-    
+
     return model
 
-# Load CNN model with detailed error handling
+# Load the trained model with detailed error handling
 model_loaded = False
 try:
-    cnn_model = custom_load_model('one.keras')
+    model = custom_load_model('one.keras')
     model_loaded = True
     st.write("Model loaded successfully.")
 except FileNotFoundError:
-    st.error("CNN model file 'oneclasss.h5' not found. Please ensure the file is accessible.")
+    st.error("Model file 'oneclasss.keras' not found. Please ensure the file is accessible.")
 except TypeError as e:
     st.error(f"TypeError encountered: {e}")
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
-# Function to highlight the gray range
-def highlight_gray_range(image_np, gray_lower, gray_upper):
-    mask = (image_np >= gray_lower) & (image_np <= gray_upper)
-    highlighted_image = np.where(mask, image_np, 0)
-    return highlighted_image, mask
+# Function to preprocess the image
+def preprocess_image(image):
+    # Resize the image to match the input shape of the model
+    img = image.resize((224, 224))
+    # Convert the image to a numpy array
+    img_array = np.array(img)
+    # Normalize the pixel values to be in the range [0, 1]
+    img_array = img_array / 255.0
+    # Add a batch dimension
+    img_array = np.expand_dims(img_array, axis=0)
 
-# Function to create the highlighted overlay
-def create_highlighted_overlay(original_image, highlighted_region, mask, highlight_color):
-    overlay = np.stack((original_image,) * 3, axis=-1)  # Convert to RGB
-    overlay[np.where(mask)] = highlight_color
-    return overlay
+    return img_array
 
-# Main streamlit app
-st.title('Mammogram Gray Range Highlighter')
+# Define a function to make predictions on the preprocessed image
+def predict_image(image):
+    # Preprocess the image
+    img = preprocess_image(image)
+    # Make predictions using the model
+    predictions = model.predict(img)
+    # Convert the predicted probabilities to class labels
+    predicted_class = 1 if predictions[0][0] > 0.5 else 0
+    # Calculate confidence
+    confidence = predictions[0][0] * 100 if predicted_class == 1 else (1 - predictions[0][0]) * 100
+    # Print the confidence
+    st.write(f"Confidence: {confidence:.2f}%")
 
-# Sidebar inputs for gray range
-st.sidebar.header('Select Gray Range')
-gray_lower = st.sidebar.slider('Lower Bound of Gray Range', 0, 255, 50)
-gray_upper = st.sidebar.slider('Upper Bound of Gray Range', 0, 255, 150)
+    return predicted_class
 
-# File uploader for mammogram image
-uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
-
-if uploaded_file is not None:
-    # Load the image using PIL
-    image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
-    image_np = np.array(image)
-
-    # Apply the gray range filter and get the mask
-    highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
-
-    # Create the highlighted overlay with a specific color (e.g., red)
-    highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
-    highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
-
-    # Display the original image
-    st.image(image_np, caption='Original Image', use_column_width=True, channels='GRAY')
-
-    # Display the highlighted image
-    st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
-
-    # Display the highlighted overlay
-    st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
-
-    # Plot the mask and the highlighted overlay
-    fig, axs = plt.subplots(1, 2)
-    axs[0].imshow(mask, cmap='gray')
-    axs[0].set_title('Mask')
-    axs[0].axis('off')
-
-    axs[1].imshow(highlighted_overlay)
-    axs[1].set_title('Highlighted Overlay')
-    axs[1].axis('off')
-
-    # Show the plot
-    st.pyplot(fig)
-
-    if model_loaded:
-        # Preprocess the image for the CNN model
-        image_resized = image.resize((224, 224))  # Resize to the input size the CNN expects
-        image_array = np.array(image_resized).reshape((1, 224, 224, 1)) / 255.0  # Normalize the image
-
-        # Make a prediction using the CNN model
-        cnn_prediction = cnn_model.predict(image_array)
-        cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-        cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-
-        # Display the CNN prediction result
-        st.write(f'CNN Prediction: {cnn_result}')
-        st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
-
-set_background('bgs/bg5.jpg')
-
-# Set title
+# Streamlit UI
 st.title('Breast Cancer Classification')
 
-# Text inputs for breast cancer prediction parameters
-st.title('Breast Cancer Prediction Parameters Input')
+# File uploader for mammogram image
+uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png"])
 
-# Create text inputs for each parameter
-parameters = {
-    'Mean Radius': st.text_input('Mean Radius'),
-    'Mean Texture': st.text_input('Mean Texture'),
-    'Mean Perimeter': st.text_input('Mean Perimeter'),
-    'Mean Area': st.text_input('Mean Area'),
-    'Mean Smoothness': st.text_input('Mean Smoothness'),
-    'Mean Compactness': st.text_input('Mean Compactness'),
-    'Mean Concavity': st.text_input('Mean Concavity'),
-    'Mean Concave Points': st.text_input('Mean Concave Points'),
-    'Mean Symmetry': st.text_input('Mean Symmetry'),
-    'Mean Fractal Dimension': st.text_input('Mean Fractal Dimension'),
-    'Radius Error': st.text_input('Radius Error'),
-    'Texture Error': st.text_input('Texture Error'),
-    'Perimeter Error': st.text_input('Perimeter Error'),
-    'Area Error': st.text_input('Area Error'),
-    'Smoothness Error': st.text_input('Smoothness Error'),
-    'Compactness Error': st.text_input('Compactness Error'),
-    'Concavity Error': st.text_input('Concavity Error'),
-    'Concave Points Error': st.text_input('Concave Points Error'),
-    'Symmetry Error': st.text_input('Symmetry Error'),
-    'Fractal Dimension Error': st.text_input('Fractal Dimension Error'),
-    'Worst Radius': st.text_input('Worst Radius'),
-    'Worst Texture': st.text_input('Worst Texture'),
-    'Worst Perimeter': st.text_input('Worst Perimeter'),
-    'Worst Area': st.text_input('Worst Area'),
-    'Worst Smoothness': st.text_input('Worst Smoothness'),
-    'Worst Compactness': st.text_input('Worst Compactness'),
-    'Worst Concavity': st.text_input('Worst Concavity'),
-    'Worst Concave Points': st.text_input('Worst Concave Points'),
-    'Worst Symmetry': st.text_input('Worst Symmetry'),
-    'Worst Fractal Dimension': st.text_input('Worst Fractal Dimension')
-}
+if uploaded_file is not None and model_loaded:
+    # Load the image using PIL
+    image = Image.open(uploaded_file)
+    st.image(image, caption='Uploaded Image', use_column_width=True)
 
-# Add a button to submit the data
-if st.button('Predict'):
-    # Collect the entered data
-    data = np.array([
-        parameters['Mean Radius'], parameters['Mean Texture'], parameters['Mean Perimeter'], parameters['Mean Area'], parameters['Mean Smoothness'],
-        parameters['Mean Compactness'], parameters['Mean Concavity'], parameters['Mean Concave Points'], parameters['Mean Symmetry'],
-        parameters['Mean Fractal Dimension'], parameters['Radius Error'], parameters['Texture Error'], parameters['Perimeter Error'],
-        parameters['Area Error'], parameters['Smoothness Error'], parameters['Compactness Error'], parameters['Concavity Error'],
-        parameters['Concave Points Error'], parameters['Symmetry Error'], parameters['Fractal Dimension Error'], parameters['Worst Radius'],
-        parameters['Worst Texture'], parameters['Worst Perimeter'], parameters['Worst Area'], parameters['Worst Smoothness'], parameters['Worst Compactness'],
-        parameters['Worst Concavity'], parameters['Worst Concave Points'], parameters['Worst Symmetry'], parameters['Worst Fractal Dimension']
-    ], dtype=float).reshape(1, -1)
+    # Make predictions on the image
+    predicted_class = predict_image(image)
 
-    # Scale the input data
-    data_scaled = scaler.transform(data)
-    
-    # Make a prediction using the KNN model
-    knn_prediction = knn.predict(data_scaled)
-    knn_result = 'Malignant' if knn_prediction[0] == 1 else 'Benign'
+    # Map the predicted class label to the corresponding class name
+    label_mapping = {
+        0: 'Benign',
+        1: 'Malignant'
+    }
+    predicted_class_name = label_mapping[predicted_class]
 
-    # Display the KNN prediction result
-    st.write(f'KNN Prediction: {knn_result}')
-
+    # Print the predicted class name
+    st.write("Predicted Class:", predicted_class_name)
 
 
 
