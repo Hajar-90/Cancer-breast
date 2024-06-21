@@ -26,7 +26,7 @@ def set_background(image_file):
 set_background('bgs/bg5.jpg')
 
 # Set title
-st.title('Breast Cancer classification')
+st.title('Breast Cancer Classification')
 
 # Set header
 st.header('Please upload a Breast Mammography image')
@@ -43,7 +43,7 @@ except FileNotFoundError:
     st.error("Model file 'oneclass.h5' or labels file 'labels.txt' not found. Please check your files and try again.")
     st.stop()
 
-# Display image
+# Display image and classify
 if file is not None:
     image = Image.open(file).convert('RGB')
     st.image(image, use_column_width=True)
@@ -52,8 +52,8 @@ if file is not None:
     class_name, conf_score = classify(image, model, class_names)
 
     # Write classification
-    st.write("## {}".format(class_name))
-    st.write("### Score: {}%".format(int(conf_score * 1000) / 10))
+    st.write("## Predicted Class: {}".format(class_name))
+    st.write("### Confidence Score: {}%".format(int(conf_score * 1000) / 10))
 
 
 
