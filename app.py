@@ -1,17 +1,40 @@
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-
-
-
 import streamlit as st
 import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import InputLayer, Conv2D, BatchNormalization, Activation, GlobalAveragePooling2D
 from PIL import Image, ImageOps
 import numpy as np
 
-# Function to load the model
+# Custom layer handling for Functional layers
+def custom_layer_from_config(config):
+    module = config.pop('module', None)
+    class_name = config.pop('class_name', None)
+    
+    if module == 'keras.layers' and class_name == 'Conv2D':
+        return Conv2D(**config)
+    elif module == 'keras.layers' and class_name == 'BatchNormalization':
+        return BatchNormalization(**config)
+    elif module == 'keras.layers' and class_name == 'Activation':
+        return Activation(**config)
+    elif module == 'keras.layers' and class_name == 'GlobalAveragePooling2D':
+        return GlobalAveragePooling2D(**config)
+    else:
+        raise ValueError(f"Unsupported layer: {module}.{class_name}")
+
+# Custom object dictionary
+custom_objects = {
+    'InputLayer': InputLayer,
+    'Conv2D': Conv2D,
+    'BatchNormalization': BatchNormalization,
+    'Activation': Activation,
+    'GlobalAveragePooling2D': GlobalAveragePooling2D,
+    'custom_layer_from_config': custom_layer_from_config
+}
+
+# Function to load the model with custom objects
 def load_model_safely(model_path):
     try:
-        model = tf.keras.models.load_model(model_path)
+        model = load_model(model_path, custom_objects=custom_objects)
         st.success("Model loaded successfully.")
         return model
     except Exception as e:
@@ -19,7 +42,7 @@ def load_model_safely(model_path):
         return None
 
 # Load the model
-model_path = 'oneclass.keras'
+model_path = 'oneclass.h5'
 model = load_model_safely(model_path)
 
 # Function to preprocess the image
