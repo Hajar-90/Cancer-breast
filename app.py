@@ -1,11 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 
-# Load the existing model
-model = load_model('oneclass.h5')
 
-# Save the model in the new .keras format
-model.save('oneclass.keras')
 
 import streamlit as st
 import tensorflow as tf
