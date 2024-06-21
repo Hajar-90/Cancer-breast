@@ -21,7 +21,7 @@ def custom_load_model(filepath):
 # Load the trained model with detailed error handling
 model_loaded = False
 try:
-    model = custom_load_model('one.keras')
+    model = custom_load_model('oneclasss.keras')
     model_loaded = True
     st.write("Model loaded successfully.")
 except FileNotFoundError:
@@ -48,6 +48,10 @@ def preprocess_image(image):
 def predict_image(image):
     # Preprocess the image
     img = preprocess_image(image)
+    
+    # Add this debug line to print the shape and type of the image array
+    st.write(f"Processed image shape: {img.shape}, dtype: {img.dtype}")
+
     # Make predictions using the model
     predictions = model.predict(img)
     # Convert the predicted probabilities to class labels
@@ -66,22 +70,28 @@ st.title('Breast Cancer Classification')
 uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None and model_loaded:
-    # Load the image using PIL
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
+    try:
+        # Load the image using PIL
+        image = Image.open(uploaded_file)
+        st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Make predictions on the image
-    predicted_class = predict_image(image)
+        # Make predictions on the image
+        predicted_class = predict_image(image)
 
-    # Map the predicted class label to the corresponding class name
-    label_mapping = {
-        0: 'Benign',
-        1: 'Malignant'
-    }
-    predicted_class_name = label_mapping[predicted_class]
+        # Map the predicted class label to the corresponding class name
+        label_mapping = {
+            0: 'Benign',
+            1: 'Malignant'
+        }
+        predicted_class_name = label_mapping[predicted_class]
 
-    # Print the predicted class name
-    st.write("Predicted Class:", predicted_class_name)
+        # Print the predicted class name
+        st.write("Predicted Class:", predicted_class_name)
+    except ValueError as e:
+        st.error(f"ValueError: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
 
