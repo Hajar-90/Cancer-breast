@@ -5,30 +5,36 @@ from tensorflow.keras.layers import InputLayer, Conv2D, BatchNormalization, Acti
 from PIL import Image, ImageOps
 import numpy as np
 
-# Custom layer handling for Functional layers
-def custom_layer_from_config(config):
-    module = config.pop('module', None)
-    class_name = config.pop('class_name', None)
+# Custom layer handling for BatchNormalization
+def custom_batchnorm_from_config(config):
+    axis = config.pop('axis', -1)
+    momentum = config.pop('momentum', 0.99)
+    epsilon = config.pop('epsilon', 1e-3)
+    beta_initializer = tf.keras.initializers.deserialize(config.pop('beta_initializer'))
+    gamma_initializer = tf.keras.initializers.deserialize(config.pop('gamma_initializer'))
+    moving_mean_initializer = tf.keras.initializers.deserialize(config.pop('moving_mean_initializer'))
+    moving_variance_initializer = tf.keras.initializers.deserialize(config.pop('moving_variance_initializer'))
     
-    if module == 'keras.layers' and class_name == 'Conv2D':
-        return Conv2D(**config)
-    elif module == 'keras.layers' and class_name == 'BatchNormalization':
-        return BatchNormalization(**config)
-    elif module == 'keras.layers' and class_name == 'Activation':
-        return Activation(**config)
-    elif module == 'keras.layers' and class_name == 'GlobalAveragePooling2D':
-        return GlobalAveragePooling2D(**config)
-    else:
-        raise ValueError(f"Unsupported layer: {module}.{class_name}")
+    layer = BatchNormalization(
+        axis=axis,
+        momentum=momentum,
+        epsilon=epsilon,
+        beta_initializer=beta_initializer,
+        gamma_initializer=gamma_initializer,
+        moving_mean_initializer=moving_mean_initializer,
+        moving_variance_initializer=moving_variance_initializer,
+        **config
+    )
+    
+    return layer
 
 # Custom object dictionary
 custom_objects = {
     'InputLayer': InputLayer,
     'Conv2D': Conv2D,
-    'BatchNormalization': BatchNormalization,
+    'BatchNormalization': custom_batchnorm_from_config,
     'Activation': Activation,
-    'GlobalAveragePooling2D': GlobalAveragePooling2D,
-    'custom_layer_from_config': custom_layer_from_config
+    'GlobalAveragePooling2D': GlobalAveragePooling2D
 }
 
 # Function to load the model with custom objects
@@ -83,4 +89,5 @@ if uploaded_file is not None:
 
 # To run the streamlit app, use the following command in your terminal:
 # streamlit run your_script_name.py
+
 
