@@ -5,7 +5,7 @@ from PIL import Image, ImageOps
 import numpy as np
 
 # Load the model
-model = load_model('oneclasss.h5')
+model = load_model('oneclass.h5')
 
 # Function to preprocess the image
 def preprocess_image(image):
