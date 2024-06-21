@@ -5,21 +5,21 @@ from tensorflow.keras.layers import BatchNormalization
 from PIL import Image, ImageOps
 import numpy as np
 import h5py
-import tensorflow as tf
-from tensorflow.keras.models import load_model
 
-model = load_model('oneclass.h5')
-model.save('oneclass_saved_model')
+# Custom BatchNormalization layer handling
+def custom_bn_layer(config, custom_objects):
+    return BatchNormalization(**config)
 
-import streamlit as st
-import tensorflow as tf
-from PIL import Image, ImageOps
-import numpy as np
+# Custom object dictionary
+custom_objects = {
+    'BatchNormalization': custom_bn_layer
+}
 
-# Function to load the model
+# Function to load the model with custom objects
 def load_model_safely(model_path):
     try:
-        model = tf.keras.models.load_model(model_path)
+        with h5py.File(model_path, 'r') as f:
+            model = load_model(f, custom_objects=custom_objects)
         st.success("Model loaded successfully.")
         return model
     except Exception as e:
@@ -27,7 +27,7 @@ def load_model_safely(model_path):
         return None
 
 # Load the model
-model_path = 'oneclass_saved_model'
+model_path = 'oneclass.h5'
 model = load_model_safely(model_path)
 
 # Function to preprocess the image
@@ -68,4 +68,3 @@ if uploaded_file is not None:
 
 # To run the streamlit app, use the following command in your terminal:
 # streamlit run your_script_name.py
-
