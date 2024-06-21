@@ -21,11 +21,11 @@ def custom_load_model(filepath):
 # Load the trained model with detailed error handling
 model_loaded = False
 try:
-    model = custom_load_model('one.keras')
+    model = custom_load_model('oneon.keras')
     model_loaded = True
     st.write("Model loaded successfully.")
 except FileNotFoundError:
-    st.error("Model file 'oneclasss.keras' not found. Please ensure the file is accessible.")
+    st.error("Model file 'oneon.keras' not found. Please ensure the file is accessible.")
 except TypeError as e:
     st.error(f"TypeError encountered: {e}")
 except Exception as e:
