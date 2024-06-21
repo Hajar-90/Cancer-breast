@@ -1,14 +1,19 @@
 import streamlit as st
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+from tensorflow.keras.layers import BatchNormalization
 from PIL import Image, ImageOps
 import numpy as np
-import h5py
 
-# Function to load the model with error handling
+# Custom objects dictionary
+custom_objects = {
+    'BatchNormalization': BatchNormalization
+}
+
+# Function to load the model with custom objects
 def load_model_safely(model_path):
     try:
-        model = load_model(model_path)
+        model = load_model(model_path, custom_objects=custom_objects)
         st.success("Model loaded successfully.")
         return model
     except Exception as e:
@@ -54,3 +59,7 @@ if uploaded_file is not None:
         st.write(f"Prediction: {prediction}")
     else:
         st.error("Prediction could not be made due to an error.")
+
+# To run the streamlit app, use the following command in your terminal:
+# streamlit run your_script_name.py
+
