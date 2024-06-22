@@ -69,15 +69,15 @@ if uploaded_file is not None:
         highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
         highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-        # Display images based on user selection
+        # Display images based on user selection with specified width
         if show_original:
-            st.image(image_resized, caption='Original Image', use_column_width=True, channels='GRAY')
+            st.image(image_resized, caption='Original Image', width=500, channels='GRAY')
         
         if show_highlighted:
-            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
+            st.image(highlighted_image, caption='Highlighted Image', width=500, channels='GRAY')
         
         if show_overlay:
-            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+            st.image(highlighted_overlay, caption='Highlighted Overlay', width=500)
 
         # Plot the mask and the highlighted overlay
         fig, axs = plt.subplots(1, 2)
@@ -106,7 +106,7 @@ if uploaded_file is not None:
             # Display the CNN prediction result
             st.subheader('CNN Prediction')
             st.markdown(f'**Result**: {cnn_result}')
-            st.markdown(f'**Confidence**: {cnn_confidence:.2f}')
+            st.markdown(f'**Confidence**: {cnn_confidence:.2%}')  # Display confidence in percentage
 
     except ValueError as e:
         st.sidebar.error(f"ValueError: {e}")
@@ -186,10 +186,11 @@ if st.button('Predict'):
         # Display the result
         result = 'Malignant' if prediction[0] == 1 else 'Benign'
         st.write(f'KNN Prediction: {result}')
-        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2f}')
+        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2%}')  # Display probability in percentage
 
     except ValueError as e:
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
