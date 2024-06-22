@@ -90,6 +90,7 @@ if uploaded_file is not None:
             cnn_prediction = cnn_model.predict(image_array)
             cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
             cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+            cnn_confidence=cnn_confidence*100
 
             # Determine the appropriate emoji based on confidence level
             if cnn_confidence >= 90:
