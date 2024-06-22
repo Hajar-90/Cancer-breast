@@ -109,6 +109,15 @@ with st.sidebar:
 # Main Section for Breast Cancer Prediction Parameters
 st.title('Breast Cancer Prediction Parameters Input')
 
+# Define CSS for smaller text inputs
+st.markdown("""
+    <style>
+    .small-text-input {
+        font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Initialize parameters to 0
 parameters = {
     'Mean Radius': '0',
@@ -149,12 +158,10 @@ col1, col2 = st.columns(2)
 # Define text inputs for parameters with smaller font size
 with col1:
     for key in list(parameters.keys())[:15]:
-        st.markdown(f'**{key}**')
-        parameters[key] = st.number_input('', key=key.lower().replace(' ', '_'), value=0, format='%f')
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 with col2:
     for key in list(parameters.keys())[15:]:
-        st.markdown(f'**{key}**')
-        parameters[key] = st.number_input('', key=key.lower().replace(' ', '_'), value=0, format='%f')
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 
 # Predict button
 if st.button('Predict'):
@@ -178,5 +185,4 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
-
 
