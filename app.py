@@ -38,8 +38,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Title and Sidebar for CNN Prediction
-st.title('CNN Breast Cancer Prediction')
+# Title and Sidebar for Mammogram Analysis
+st.title('Breast Cancer Classification')
 
 # Display CNN prediction box
 if model_loaded:
@@ -115,7 +115,7 @@ if model_loaded:
             st.error(f"An unexpected error occurred during image processing or prediction: {e}")
 
 # Main Section for Breast Cancer Prediction Parameters Input
-st.title('KNN Breast Cancer Prediction')
+st.title('Breast Cancer Prediction Parameters Input')
 
 # Initialize parameters to 0
 parameters = {
@@ -184,6 +184,5 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
-
 
 
