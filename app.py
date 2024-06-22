@@ -21,7 +21,7 @@ def custom_load_model(filepath):
 # Load the trained model with detailed error handling
 model_loaded = False
 try:
-    model = custom_load_model('oneon.keras')
+    model = custom_load_model('oneone.keras')
     model_loaded = True
     st.write("Model loaded successfully.")
 except FileNotFoundError:
