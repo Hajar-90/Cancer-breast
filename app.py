@@ -60,7 +60,7 @@ if uploaded_file is not None:
         image_np = np.array(image)
 
         # Resize image to fit display
-        image_resized = image.resize((250, 250))
+        image_resized = image.resize((500, 500))
 
         # Apply the gray range filter and get the mask
         highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
