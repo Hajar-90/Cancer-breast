@@ -82,8 +82,11 @@ if uploaded_file is not None:
 
 if model_loaded:
         # Display the CNN prediction result with emphasis
+    cnn_prediction = cnn_model.predict(image_array)
+    cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+    cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
     st.markdown(f'**CNN Prediction:** {cnn_result}')
-    st.markdown(f'**CNN Prediction Confidence:** {cnn_confidence:.2f}')
+    st.markdown(f'**CNN Prediction Confidence:** {cnn_confidence*100:.2f} %')
     # Preprocess the image for the CNN model
     image_rgb = image.convert('RGB')  # Convert to RGB
     image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
