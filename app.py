@@ -92,8 +92,13 @@ if model_loaded:
     cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
     # Display the CNN prediction result with emphasis
-    st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction:</strong> {cnn_result}</p>', unsafe_allow_html=True)
-    st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction Confidence:</strong> {cnn_confidence:.2f}</p>', unsafe_allow_html=True)
+    if cnn_prediction:
+        st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction:</strong> {cnn_result}</p>', unsafe_allow_html=True)
+        st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction Confidence:</strong> {cnn_confidence:.2f}</p>', unsafe_allow_html=True)
+    else:
+        st.error("Failed to make CNN prediction. Please check your input image.")
+else:
+    st.error("Failed to load CNN model. Please check if the model file 'model.keras' is accessible.")
 
 
 
