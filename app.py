@@ -120,50 +120,52 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Initialize parameters to 0
-parameters = {
-    'Mean Radius': '0',
-    'Mean Texture': '0',
-    'Mean Perimeter': '0',
-    'Mean Area': '0',
-    'Mean Smoothness': '0',
-    'Mean Compactness': '0',
-    'Mean Concavity': '0',
-    'Mean Concave Points': '0',
-    'Mean Symmetry': '0',
-    'Mean Fractal Dimension': '0',
-    'Radius Error': '0',
-    'Texture Error': '0',
-    'Perimeter Error': '0',
-    'Area Error': '0',
-    'Smoothness Error': '0',
-    'Compactness Error': '0',
-    'Concavity Error': '0',
-    'Concave Points Error': '0',
-    'Symmetry Error': '0',
-    'Fractal Dimension Error': '0',
-    'Worst Radius': '0',
-    'Worst Texture': '0',
-    'Worst Perimeter': '0',
-    'Worst Area': '0',
-    'Worst Smoothness': '0',
-    'Worst Compactness': '0',
-    'Worst Concavity': '0',
-    'Worst Concave Points': '0',
-    'Worst Symmetry': '0',
-    'Worst Fractal Dimension': '0'
+# Information about each parameter (tooltips or descriptions)
+parameter_info = {
+    'Mean Radius': 'Mean radius of the cells.',
+    'Mean Texture': 'Mean texture of the cells.',
+    'Mean Perimeter': 'Mean perimeter of the cells.',
+    'Mean Area': 'Mean area of the cells.',
+    'Mean Smoothness': 'Mean smoothness of the cells.',
+    'Mean Compactness': 'Mean compactness of the cells.',
+    'Mean Concavity': 'Mean concavity of the cells.',
+    'Mean Concave Points': 'Mean number of concave portions of the contour.',
+    'Mean Symmetry': 'Mean symmetry of the cells.',
+    'Mean Fractal Dimension': 'Mean fractal dimension of the cells.',
+    'Radius Error': 'Standard error of the radius of the cells.',
+    'Texture Error': 'Standard error of the texture of the cells.',
+    'Perimeter Error': 'Standard error of the perimeter of the cells.',
+    'Area Error': 'Standard error of the area of the cells.',
+    'Smoothness Error': 'Standard error of the smoothness of the cells.',
+    'Compactness Error': 'Standard error of the compactness of the cells.',
+    'Concavity Error': 'Standard error of the concavity of the cells.',
+    'Concave Points Error': 'Standard error of the number of concave portions of the contour.',
+    'Symmetry Error': 'Standard error of the symmetry of the cells.',
+    'Fractal Dimension Error': 'Standard error of the fractal dimension of the cells.',
+    'Worst Radius': 'Worst (largest) radius of the cells.',
+    'Worst Texture': 'Worst (most severe) texture of the cells.',
+    'Worst Perimeter': 'Worst (largest) perimeter of the cells.',
+    'Worst Area': 'Worst (largest) area of the cells.',
+    'Worst Smoothness': 'Worst (most severe) smoothness of the cells.',
+    'Worst Compactness': 'Worst (most severe) compactness of the cells.',
+    'Worst Concavity': 'Worst (most severe) concavity of the cells.',
+    'Worst Concave Points': 'Worst (most severe) number of concave portions of the contour.',
+    'Worst Symmetry': 'Worst (most severe) symmetry of the cells.',
+    'Worst Fractal Dimension': 'Worst (most severe) fractal dimension of the cells.'
 }
 
 # Layout with columns for text inputs
 col1, col2 = st.columns(2)
 
-# Define text inputs for parameters with smaller font size
+# Define text inputs for parameters with smaller font size and tooltips/descriptions
 with col1:
-    for key in list(parameters.keys())[:15]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+    for key in list(parameter_info.keys())[:15]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
+                                        help=f"{parameter_info[key]}")
 with col2:
-    for key in list(parameters.keys())[15:]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+    for key in list(parameter_info.keys())[15:]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
+                                        help=f"{parameter_info[key]}")
 
 # Predict button
 if st.button('Predict'):
