@@ -43,9 +43,9 @@ set_background('bgs/bg5.jpg')
 
 # Title and Sidebar for Mammogram Analysis
 st.title('Breast Cancer Classification')
-uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+uploaded_files = st.sidebar.file_uploader("Upload Mammogram Images", type=["jpg", "jpeg", "png", "pgm"], accept_multiple_files=True)
 
-if uploaded_file is not None:
+if uploaded_files:
     st.sidebar.markdown('### Select Gray Range')
     gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
     gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
@@ -54,64 +54,66 @@ if uploaded_file is not None:
     show_highlighted = st.sidebar.checkbox("Show Highlighted Image")
     show_overlay = st.sidebar.checkbox("Show Highlighted Overlay")
 
-    try:
-        # Load the image using PIL
-        image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
-        image_np = np.array(image)
+    for uploaded_file in uploaded_files:
+        try:
+            # Load the image using PIL
+            image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
+            image_np = np.array(image)
 
-        # Resize image to fit display
-        image_resized = image.resize((500, 500))
+            # Resize image to fit display
+            image_resized = image.resize((500, 500))
 
-        # Apply the gray range filter and get the mask
-        highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
+            # Apply the gray range filter and get the mask
+            highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
 
-        # Create the highlighted overlay with a specific color (e.g., red)
-        highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
-        highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
+            # Create the highlighted overlay with a specific color (e.g., red)
+            highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
+            highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-        # Display images based on user selection with specified width
-        if show_original:
-            st.image(image_resized, caption='Original Image', width=500, channels='GRAY')
-        
-        if show_highlighted:
-            st.image(highlighted_image, caption='Highlighted Image', width=500, channels='GRAY')
-        
-        if show_overlay:
-            st.image(highlighted_overlay, caption='Highlighted Overlay', width=500)
+            # Display images based on user selection with specified width
+            st.subheader(f"Uploaded Image: {uploaded_file.name}")
+            if show_original:
+                st.image(image_resized, caption='Original Image', width=500, channels='GRAY')
 
-        # Plot the mask and the highlighted overlay
-        fig, axs = plt.subplots(1, 2)
-        axs[0].imshow(mask, cmap='gray')
-        axs[0].set_title('Mask')
-        axs[0].axis('off')
+            if show_highlighted:
+                st.image(highlighted_image, caption='Highlighted Image', width=500, channels='GRAY')
 
-        axs[1].imshow(highlighted_overlay)
-        axs[1].set_title('Highlighted Overlay')
-        axs[1].axis('off')
+            if show_overlay:
+                st.image(highlighted_overlay, caption='Highlighted Overlay', width=500)
 
-        # Show the plot
-        st.pyplot(fig)
+            # Plot the mask and the highlighted overlay
+            fig, axs = plt.subplots(1, 2)
+            axs[0].imshow(mask, cmap='gray')
+            axs[0].set_title('Mask')
+            axs[0].axis('off')
 
-        if model_loaded:
-            # Preprocess the image for the CNN model
-            image_rgb = image.convert('RGB')  # Convert to RGB
-            image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-            image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
+            axs[1].imshow(highlighted_overlay)
+            axs[1].set_title('Highlighted Overlay')
+            axs[1].axis('off')
 
-            # Make a prediction using the CNN model
-            cnn_prediction = cnn_model.predict(image_array)
-            cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-            cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+            # Show the plot
+            st.pyplot(fig)
 
-            # Display the CNN prediction result
-            st.subheader('CNN Prediction')
-            st.markdown(f'**Result**: {cnn_result}')
-            st.markdown(f'**Confidence**: {cnn_confidence:.2%}')  # Display confidence in percentage
+            if model_loaded:
+                # Preprocess the image for the CNN model
+                image_rgb = image.convert('RGB')  # Convert to RGB
+                image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
+                image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
 
-    except ValueError as e:
-        st.sidebar.error(f"ValueError: {e}")
-    except Exception as e:
-        st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
+                # Make a prediction using the CNN model
+                cnn_prediction = cnn_model.predict(image_array)
+                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+
+                # Display the CNN prediction result
+                st.subheader('CNN Prediction')
+                st.markdown(f'**Result**: {cnn_result}')
+                st.markdown(f'**Confidence**: {cnn_confidence:.2%}')  # Display confidence in percentage
+
+        except ValueError as e:
+            st.sidebar.error(f"ValueError: {e}")
+        except Exception as e:
+            st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
 
 # Main Section for Breast Cancer Prediction Parameters Input
 st.title('Breast Cancer Prediction Parameters Input')
@@ -192,5 +194,6 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
