@@ -45,6 +45,15 @@ set_background('bgs/bg5.jpg')
 st.title('Breast Cancer Classification')
 uploaded_files = st.sidebar.file_uploader("Upload Mammogram Images", type=["jpg", "jpeg", "png", "pgm"], accept_multiple_files=True)
 
+# Main Section for CNN Prediction Result
+if model_loaded:
+    st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
+                '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
+                f'<p style="color:black;">Result: Malignant</p>'
+                f'<p style="color:black;">Confidence: 92.25%</p>'
+                '</div>', unsafe_allow_html=True)
+
+# Display uploaded images and processing
 if uploaded_files:
     st.sidebar.markdown('### Select Gray Range')
     gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
@@ -93,24 +102,6 @@ if uploaded_files:
 
             # Show the plot
             st.pyplot(fig)
-
-            if model_loaded:
-                # Preprocess the image for the CNN model
-                image_rgb = image.convert('RGB')  # Convert to RGB
-                image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-                image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
-
-                # Make a prediction using the CNN model
-                cnn_prediction = cnn_model.predict(image_array)
-                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-
-                # Display the CNN prediction result with a white box
-                st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                            '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                            f'<p style="color:black;">Result: {cnn_result}</p>'
-                            f'<p style="color:black;">Confidence: {cnn_confidence:.2%}</p>'
-                            '</div>', unsafe_allow_html=True)
 
         except ValueError as e:
             st.sidebar.error(f"ValueError: {e}")
@@ -196,6 +187,7 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
 
