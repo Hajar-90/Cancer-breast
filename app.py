@@ -103,7 +103,7 @@ if st.sidebar.button('Predict'):
         st.write(f'KNN Prediction Probability: {prediction_proba[0]}')
 
         # Load and preprocess image for CNN prediction if model is loaded
-if model_loaded:
+        if model_loaded:
             uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
             if uploaded_file is not None:
