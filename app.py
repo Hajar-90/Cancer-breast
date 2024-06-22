@@ -14,10 +14,10 @@ scaler = joblib.load('scaler.pkl')
 # Load CNN model with detailed error handling
 model_loaded = False
 try:
-    cnn_model = tf.keras.models.load_model('oneone.keras')
+    cnn_model = tf.keras.models.load_model('model.keras')
     model_loaded = True
 except FileNotFoundError:
-    st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
+    st.error("CNN model file 'model.keras' not found. Please upload the model file.")
 except TypeError as e:
     st.error(f"TypeError encountered: {e}")
 except Exception as e:
@@ -82,8 +82,9 @@ if uploaded_file is not None:
 
     if model_loaded:
         # Preprocess the image for the CNN model
-        image_resized = image.resize((224, 224))  # Resize to the input size the CNN expects
-        image_array = np.array(image_resized).reshape((1, 224, 224, 1)) / 255.0  # Normalize the image
+        image_rgb = image.convert('RGB')  # Convert to RGB
+        image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
+        image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
 
         # Make a prediction using the CNN model
         cnn_prediction = cnn_model.predict(image_array)
