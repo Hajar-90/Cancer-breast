@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from util import highlight_gray_range, create_highlighted_overlay, set_background
+from util import classify, set_background
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -17,7 +17,7 @@ try:
     cnn_model = tf.keras.models.load_model('oneone.keras')
     model_loaded = True
 except FileNotFoundError:
-    st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
+    st.error("CNN model file 'model.keras' not found. Please upload the model file.")
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
@@ -33,18 +33,16 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
     overlay[np.where(mask)] = highlight_color
     return overlay
 
-# Main Streamlit app settings
+# Main streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# Set background and title
 set_background('bgs/bg5.jpg')
-st.title('Breast Cancer Classification')
 
-# Sidebar for Mammogram Analysis
+# Title and Sidebar for Mammogram Analysis
+st.title('Breast Cancer Classification')
 with st.sidebar:
     st.markdown('## Mammogram Analysis')
     uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
@@ -160,10 +158,10 @@ col1, col2 = st.columns(2)
 # Define text inputs for parameters with smaller font size
 with col1:
     for key in list(parameters.keys())[:15]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 with col2:
     for key in list(parameters.keys())[15:]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 
 # Predict button
 if st.button('Predict'):
@@ -187,5 +185,4 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
-
 
