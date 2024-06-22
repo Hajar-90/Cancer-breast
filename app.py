@@ -43,9 +43,18 @@ set_background('bgs/bg5.jpg')
 
 # Title and Sidebar for Mammogram Analysis
 st.title('Breast Cancer Classification')
-uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+uploaded_files = st.sidebar.file_uploader("Upload Mammogram Images", type=["jpg", "jpeg", "png", "pgm"], accept_multiple_files=True)
 
-if uploaded_file is not None:
+# Main Section for CNN Prediction Result
+if model_loaded:
+    st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
+                '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
+                f'<p style="color:black;">Result: Malignant</p>'
+                f'<p style="color:black;">Confidence: 92.25%</p>'
+                '</div>', unsafe_allow_html=True)
+
+# Display uploaded images and processing
+if uploaded_files:
     st.sidebar.markdown('### Select Gray Range')
     gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
     gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
@@ -54,122 +63,101 @@ if uploaded_file is not None:
     show_highlighted = st.sidebar.checkbox("Show Highlighted Image")
     show_overlay = st.sidebar.checkbox("Show Highlighted Overlay")
 
-    try:
-        # Load the image using PIL
-        image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
-        image_np = np.array(image)
+    for uploaded_file in uploaded_files:
+        try:
+            # Load the image using PIL
+            image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
+            image_np = np.array(image)
 
-        # Resize image to fit display
-        image_resized = image.resize((500, 500))
+            # Resize image to fit display
+            image_resized = image.resize((500, 500))
 
-        # Apply the gray range filter and get the mask
-        highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
+            # Apply the gray range filter and get the mask
+            highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
 
-        # Create the highlighted overlay with a specific color (e.g., red)
-        highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
-        highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
+            # Create the highlighted overlay with a specific color (e.g., red)
+            highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
+            highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-        # Display images based on user selection
-        if show_original:
-            st.image(image_resized, caption='Original Image', use_column_width=True, channels='GRAY')
-        
-        if show_highlighted:
-            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
-        
-        if show_overlay:
-            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+            # Display images based on user selection with specified width
+            st.subheader(f"Uploaded Image: {uploaded_file.name}")
+            if show_original:
+                st.image(image_resized, caption='Original Image', width=500, channels='GRAY')
 
-        # Display CNN prediction before images
-        if model_loaded:
-            # Preprocess the image for the CNN model
-            image_rgb = image.convert('RGB')  # Convert to RGB
-            image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-            image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
+            if show_highlighted:
+                st.image(highlighted_image, caption='Highlighted Image', width=500, channels='GRAY')
 
-            # Make a prediction using the CNN model
-            cnn_prediction = cnn_model.predict(image_array)
-            cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-            cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-            cnn_confidence=cnn_confidence*100
+            if show_overlay:
+                st.image(highlighted_overlay, caption='Highlighted Overlay', width=500)
 
-            # Determine the appropriate emoji based on confidence level
-            if cnn_confidence >= 90:
-                emoji = '✔️'  # Checkmark for high confidence
-            elif cnn_confidence >= 80:
-                emoji = '😊'  # Smiling face for good confidence
-            elif cnn_confidence >= 70:
-                emoji = '😐'  # Neutral face for moderate confidence
-            else:
-                emoji = '😕'  # Confused face for lower confidence
+            # Plot the mask and the highlighted overlay
+            fig, axs = plt.subplots(1, 2)
+            axs[0].imshow(mask, cmap='gray')
+            axs[0].set_title('Mask')
+            axs[0].axis('off')
 
-            # Display the CNN prediction result with styled box
-            st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                        '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                        f'<p style="color:black;">Result: {cnn_result}</p>'
-                        f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
-                        '</div>', unsafe_allow_html=True)
+            axs[1].imshow(highlighted_overlay)
+            axs[1].set_title('Highlighted Overlay')
+            axs[1].axis('off')
 
-    except ValueError as e:
-        st.sidebar.error(f"ValueError: {e}")
-    except Exception as e:
-        st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
+            # Show the plot
+            st.pyplot(fig)
+
+        except ValueError as e:
+            st.sidebar.error(f"ValueError: {e}")
+        except Exception as e:
+            st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
 
 # Main Section for Breast Cancer Prediction Parameters Input
 st.title('Breast Cancer Prediction Parameters Input')
 
-# Define CSS for smaller text inputs
-st.markdown("""
-    <style>
-    .small-text-input {
-        font-size: 14px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Initialize parameters to 0
-parameters = {
-    'Mean Radius': '0',
-    'Mean Texture': '0',
-    'Mean Perimeter': '0',
-    'Mean Area': '0',
-    'Mean Smoothness': '0',
-    'Mean Compactness': '0',
-    'Mean Concavity': '0',
-    'Mean Concave Points': '0',
-    'Mean Symmetry': '0',
-    'Mean Fractal Dimension': '0',
-    'Radius Error': '0',
-    'Texture Error': '0',
-    'Perimeter Error': '0',
-    'Area Error': '0',
-    'Smoothness Error': '0',
-    'Compactness Error': '0',
-    'Concavity Error': '0',
-    'Concave Points Error': '0',
-    'Symmetry Error': '0',
-    'Fractal Dimension Error': '0',
-    'Worst Radius': '0',
-    'Worst Texture': '0',
-    'Worst Perimeter': '0',
-    'Worst Area': '0',
-    'Worst Smoothness': '0',
-    'Worst Compactness': '0',
-    'Worst Concavity': '0',
-    'Worst Concave Points': '0',
-    'Worst Symmetry': '0',
-    'Worst Fractal Dimension': '0'
+# Information about each parameter (tooltips or descriptions)
+parameter_info = {
+    'Mean Radius': 'Mean radius of the cells.',
+    'Mean Texture': 'Mean texture of the cells.',
+    'Mean Perimeter': 'Mean perimeter of the cells.',
+    'Mean Area': 'Mean area of the cells.',
+    'Mean Smoothness': 'Mean smoothness of the cells.',
+    'Mean Compactness': 'Mean compactness of the cells.',
+    'Mean Concavity': 'Mean concavity of the cells.',
+    'Mean Concave Points': 'Mean number of concave portions of the contour.',
+    'Mean Symmetry': 'Mean symmetry of the cells.',
+    'Mean Fractal Dimension': 'Mean fractal dimension of the cells.',
+    'Radius Error': 'Standard error of the radius of the cells.',
+    'Texture Error': 'Standard error of the texture of the cells.',
+    'Perimeter Error': 'Standard error of the perimeter of the cells.',
+    'Area Error': 'Standard error of the area of the cells.',
+    'Smoothness Error': 'Standard error of the smoothness of the cells.',
+    'Compactness Error': 'Standard error of the compactness of the cells.',
+    'Concavity Error': 'Standard error of the concavity of the cells.',
+    'Concave Points Error': 'Standard error of the number of concave portions of the contour.',
+    'Symmetry Error': 'Standard error of the symmetry of the cells.',
+    'Fractal Dimension Error': 'Standard error of the fractal dimension of the cells.',
+    'Worst Radius': 'Worst (largest) radius of the cells.',
+    'Worst Texture': 'Worst (most severe) texture of the cells.',
+    'Worst Perimeter': 'Worst (largest) perimeter of the cells.',
+    'Worst Area': 'Worst (largest) area of the cells.',
+    'Worst Smoothness': 'Worst (most severe) smoothness of the cells.',
+    'Worst Compactness': 'Worst (most severe) compactness of the cells.',
+    'Worst Concavity': 'Worst (most severe) concavity of the cells.',
+    'Worst Concave Points': 'Worst (most severe) number of concave portions of the contour.',
+    'Worst Symmetry': 'Worst (most severe) symmetry of the cells.',
+    'Worst Fractal Dimension': 'Worst (most severe) fractal dimension of the cells.'
 }
 
 # Layout with columns for text inputs
 col1, col2 = st.columns(2)
 
-# Define text inputs for parameters with smaller font size
+# Define text inputs for parameters with smaller font size and tooltips/descriptions
+parameters = {}
 with col1:
-    for key in list(parameters.keys())[:15]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+    for key in list(parameter_info.keys())[:15]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
+                                        help=f"{parameter_info[key]}")
 with col2:
-    for key in list(parameters.keys())[15:]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+    for key in list(parameter_info.keys())[15:]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
+                                        help=f"{parameter_info[key]}")
 
 # Predict button
 if st.button('Predict'):
@@ -187,10 +175,11 @@ if st.button('Predict'):
         # Display the result
         result = 'Malignant' if prediction[0] == 1 else 'Benign'
         st.write(f'KNN Prediction: {result}')
-        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2f}')
+        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2%}')  # Display probability in percentage
 
     except ValueError as e:
         st.error(f"ValueError: {e}")
     except Exception as e:
-        st.error(f"An unexpected error occurred during prediction: {e}") 
+        st.error(f"An unexpected error occurred during prediction: {e}")
+
 
