@@ -103,10 +103,12 @@ if uploaded_file is not None:
             cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
             cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
-            # Display the CNN prediction result
+            # Display the CNN prediction result in a prominent way
             st.subheader('CNN Prediction')
-            st.markdown(f'**Result**: {cnn_result}')
-            st.markdown(f'**Confidence**: {cnn_confidence:.2f}')
+            result_html = f'<p style="font-size: 24px; font-weight: bold;">Result: {cnn_result}</p>'
+            confidence_html = f'<p style="font-size: 20px;">Confidence: {cnn_confidence:.2f}</p>'
+            st.markdown(result_html, unsafe_allow_html=True)
+            st.markdown(confidence_html, unsafe_allow_html=True)
 
     except ValueError as e:
         st.sidebar.error(f"ValueError: {e}")
@@ -192,5 +194,6 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
