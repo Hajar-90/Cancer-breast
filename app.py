@@ -45,14 +45,6 @@ set_background('bgs/bg5.jpg')
 st.title('Breast Cancer Classification')
 uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
-# Main Section for CNN Prediction Result
-if model_loaded:
-    st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                f'<p style="color:black;">Result: Malignant</p>'
-                f'<p style="color:black;">Confidence: 92.25%</p>'
-                '</div>', unsafe_allow_html=True)
-
 # Display uploaded image and processing
 if uploaded_file is not None:
     st.sidebar.markdown('### Select Gray Range')
