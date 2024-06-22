@@ -92,8 +92,9 @@ if model_loaded:
     cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
     # Display the CNN prediction result with emphasis
-    st.markdown(f'<p style="font-size:18px"><strong>CNN Prediction:</strong> {cnn_result}</p>', unsafe_allow_html=True)
-    st.markdown(f'<p style="font-size:18px"><strong>CNN Prediction Confidence:</strong> {cnn_confidence:.2f}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction:</strong> {cnn_result}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="font-size:18px;"><strong>CNN Prediction Confidence:</strong> {cnn_confidence:.2f}</p>', unsafe_allow_html=True)
+
 
 
 # Set background
