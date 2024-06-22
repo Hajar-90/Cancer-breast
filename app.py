@@ -109,9 +109,13 @@ with st.sidebar:
 # Main Section for Breast Cancer Prediction Parameters
 st.title('Breast Cancer Prediction Parameters Input')
 
-# Define CSS for smaller text inputs
+# Define CSS for smaller text inputs and clearer parameter names
 st.markdown("""
     <style>
+    .parameter-name {
+        font-size: 16px;
+        font-weight: bold;
+    }
     .small-text-input {
         font-size: 14px;
     }
@@ -158,10 +162,12 @@ col1, col2 = st.columns(2)
 # Define text inputs for parameters with smaller font size
 with col1:
     for key in list(parameters.keys())[:15]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+        st.markdown(f'<div class="parameter-name">{key}</div>', unsafe_allow_html=True)
+        parameters[key] = st.text_input('', key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
 with col2:
     for key in list(parameters.keys())[15:]:
-        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
+        st.markdown(f'<div class="parameter-name">{key}</div>', unsafe_allow_html=True)
+        parameters[key] = st.text_input('', key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
 
 # Predict button
 if st.button('Predict'):
@@ -185,5 +191,4 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
-
 
