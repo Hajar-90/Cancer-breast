@@ -80,20 +80,20 @@ if uploaded_file is not None:
     # Show the plot
     st.pyplot(fig)
 
-    if model_loaded:
-        # Preprocess the image for the CNN model
-        image_rgb = image.convert('RGB')  # Convert to RGB
-        image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
-        image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
+if model_loaded:
+    # Preprocess the image for the CNN model
+    image_rgb = image.convert('RGB')  # Convert to RGB
+    image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
+    image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
 
-        # Make a prediction using the CNN model
-        cnn_prediction = cnn_model.predict(image_array)
-        cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-        cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+    # Make a prediction using the CNN model
+    cnn_prediction = cnn_model.predict(image_array)
+    cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+    cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
-        # Display the CNN prediction result
-        st.write(f'CNN Prediction: {cnn_result}')
-        st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
+    # Display the CNN prediction result with emphasis
+    st.markdown(f'**CNN Prediction:** {cnn_result}')
+    st.markdown(f'**CNN Prediction Confidence:** {cnn_confidence:.2f}')
 
 # Set background
 set_background('bgs/bg5.jpg')
