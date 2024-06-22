@@ -111,15 +111,6 @@ if uploaded_files:
 # Main Section for Breast Cancer Prediction Parameters Input
 st.title('Breast Cancer Prediction Parameters Input')
 
-# Define CSS for smaller text inputs
-st.markdown("""
-    <style>
-    .small-text-input {
-        font-size: 14px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 # Information about each parameter (tooltips or descriptions)
 parameter_info = {
     'Mean Radius': 'Mean radius of the cells.',
@@ -158,6 +149,7 @@ parameter_info = {
 col1, col2 = st.columns(2)
 
 # Define text inputs for parameters with smaller font size and tooltips/descriptions
+parameters = {}
 with col1:
     for key in list(parameter_info.keys())[:15]:
         parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
