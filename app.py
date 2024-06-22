@@ -50,7 +50,9 @@ if uploaded_file is not None:
     gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
     gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
 
-    show_extra_images = st.sidebar.checkbox("Show Extra Images")
+    show_original = st.sidebar.checkbox("Show Original Image", value=True)
+    show_highlighted = st.sidebar.checkbox("Show Highlighted Image")
+    show_overlay = st.sidebar.checkbox("Show Highlighted Overlay")
 
     try:
         # Load the image using PIL
@@ -67,14 +69,15 @@ if uploaded_file is not None:
         highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
         highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-        # Display the original image
-        st.image(image_resized, caption='Original Image', use_column_width=True, channels='GRAY')
-
-        # Display the highlighted image
-        st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
-
-        # Display the highlighted overlay
-        st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+        # Display images based on user selection
+        if show_original:
+            st.image(image_resized, caption='Original Image', use_column_width=True, channels='GRAY')
+        
+        if show_highlighted:
+            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
+        
+        if show_overlay:
+            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
 
         # Plot the mask and the highlighted overlay
         fig, axs = plt.subplots(1, 2)
@@ -88,11 +91,6 @@ if uploaded_file is not None:
 
         # Show the plot
         st.pyplot(fig)
-
-        if show_extra_images:
-            # Add logic to display extra images
-            st.header('Extra Images')
-            st.markdown('Placeholder for displaying extra images based on user selection.')
 
         if model_loaded:
             # Preprocess the image for the CNN model
@@ -194,4 +192,5 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
