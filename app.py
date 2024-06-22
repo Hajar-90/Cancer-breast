@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from util import classify, set_background
+from util import highlight_gray_range, create_highlighted_overlay, set_background
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -23,22 +23,7 @@ except TypeError as e:
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
-# Function to highlight the gray range
-def highlight_gray_range(image_np, gray_lower, gray_upper):
-    mask = (image_np >= gray_lower) & (image_np <= gray_upper)
-    highlighted_image = np.where(mask, image_np, 0)
-    return highlighted_image, mask
-
-# Function to create the highlighted overlay
-def create_highlighted_overlay(original_image, highlighted_region, mask, highlight_color):
-    overlay = np.stack((original_image,) * 3, axis=-1)  # Convert to RGB
-    overlay[np.where(mask)] = highlight_color
-    return overlay
-
-# Set background
-set_background('bgs/bg5.jpg')
-
-# Title for the breast cancer classification section
+# Main Streamlit app
 st.title('Breast Cancer Classification')
 
 # Text inputs for breast cancer prediction parameters
@@ -76,10 +61,10 @@ parameters = {
     'Worst Fractal Dimension': st.sidebar.text_input('Worst Fractal Dimension')
 }
 
-# Button to trigger predictions
+# Add a button to submit the data
 if st.sidebar.button('Predict'):
     try:
-        # Collect the entered data and convert to array
+        # Collect the entered data
         data = np.array([
             parameters['Mean Radius'], parameters['Mean Texture'], parameters['Mean Perimeter'], parameters['Mean Area'], parameters['Mean Smoothness'],
             parameters['Mean Compactness'], parameters['Mean Concavity'], parameters['Mean Concave Points'], parameters['Mean Symmetry'],
@@ -93,18 +78,23 @@ if st.sidebar.button('Predict'):
         # Scale the input data
         data_scaled = scaler.transform(data)
 
-        # Make a prediction using the KNN model
+        # Make a prediction using KNN model
         prediction = knn.predict(data_scaled)
         prediction_proba = knn.predict_proba(data_scaled)
 
         # Display the KNN prediction result
-        result_knn = 'Malignant' if prediction[0] == 1 else 'Benign'
-        st.write(f'KNN Prediction: **{result_knn}**')
-        st.write(f'KNN Prediction Probability: {prediction_proba[0]}')
+        result = 'Malignant' if prediction[0] == 1 else 'Benign'
+        st.sidebar.write(f'KNN Prediction: **{result}**')
+        st.sidebar.write(f'KNN Prediction Probability: {prediction_proba[0]}')
 
-        # Load and preprocess image for CNN prediction if model is loaded
+    except ValueError as e:
+        st.error(f"ValueError: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred during KNN prediction: {e}")
+
+# Separate section for image upload and CNN prediction
 if model_loaded:
-    uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+    uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
     if uploaded_file is not None:
         try:
@@ -158,4 +148,7 @@ if model_loaded:
         except ValueError as e:
             st.error(f"ValueError: {e}")
         except Exception as e:
-            st.error(f"An unexpected error occurred during image processing or prediction: {e}")
+            st.error(f"An unexpected error occurred during image processing or CNN prediction: {e}")
+
+# Set background
+set_background('bgs/bg5.jpg')
