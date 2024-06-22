@@ -109,35 +109,46 @@ with st.sidebar:
 # Main Section for Breast Cancer Prediction Parameters
 st.title('Breast Cancer Prediction Parameters Input')
 
+# Define CSS for smaller text inputs
+st.markdown("""
+    <style>
+    .small-text-input {
+        font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # Layout with columns for text inputs
 col1, col2 = st.columns(2)
 
-# Define text inputs for parameters
-parameters_left = {
-    'Mean Radius': st.text_input('Mean Radius'),
-    'Mean Texture': st.text_input('Mean Texture'),
-    'Mean Perimeter': st.text_input('Mean Perimeter'),
-    'Mean Area': st.text_input('Mean Area'),
-    'Mean Smoothness': st.text_input('Mean Smoothness'),
-    'Mean Compactness': st.text_input('Mean Compactness'),
-    'Mean Concavity': st.text_input('Mean Concavity'),
-    'Mean Concave Points': st.text_input('Mean Concave Points'),
-    'Mean Symmetry': st.text_input('Mean Symmetry'),
-    'Mean Fractal Dimension': st.text_input('Mean Fractal Dimension')
-}
+# Define text inputs for parameters with smaller font size
+with col1:
+    parameters_left = {
+        'Mean Radius': st.text_input('Mean Radius', key='mean_radius', value='', max_chars=10, help="Enter Mean Radius"),
+        'Mean Texture': st.text_input('Mean Texture', key='mean_texture', value='', max_chars=10, help="Enter Mean Texture"),
+        'Mean Perimeter': st.text_input('Mean Perimeter', key='mean_perimeter', value='', max_chars=10, help="Enter Mean Perimeter"),
+        'Mean Area': st.text_input('Mean Area', key='mean_area', value='', max_chars=10, help="Enter Mean Area"),
+        'Mean Smoothness': st.text_input('Mean Smoothness', key='mean_smoothness', value='', max_chars=10, help="Enter Mean Smoothness"),
+        'Mean Compactness': st.text_input('Mean Compactness', key='mean_compactness', value='', max_chars=10, help="Enter Mean Compactness"),
+        'Mean Concavity': st.text_input('Mean Concavity', key='mean_concavity', value='', max_chars=10, help="Enter Mean Concavity"),
+        'Mean Concave Points': st.text_input('Mean Concave Points', key='mean_concave_points', value='', max_chars=10, help="Enter Mean Concave Points"),
+        'Mean Symmetry': st.text_input('Mean Symmetry', key='mean_symmetry', value='', max_chars=10, help="Enter Mean Symmetry"),
+        'Mean Fractal Dimension': st.text_input('Mean Fractal Dimension', key='mean_fractal_dimension', value='', max_chars=10, help="Enter Mean Fractal Dimension")
+    }
 
-parameters_right = {
-    'Radius Error': st.text_input('Radius Error'),
-    'Texture Error': st.text_input('Texture Error'),
-    'Perimeter Error': st.text_input('Perimeter Error'),
-    'Area Error': st.text_input('Area Error'),
-    'Smoothness Error': st.text_input('Smoothness Error'),
-    'Compactness Error': st.text_input('Compactness Error'),
-    'Concavity Error': st.text_input('Concavity Error'),
-    'Concave Points Error': st.text_input('Concave Points Error'),
-    'Symmetry Error': st.text_input('Symmetry Error'),
-    'Fractal Dimension Error': st.text_input('Fractal Dimension Error')
-}
+with col2:
+    parameters_right = {
+        'Radius Error': st.text_input('Radius Error', key='radius_error', value='', max_chars=10, help="Enter Radius Error"),
+        'Texture Error': st.text_input('Texture Error', key='texture_error', value='', max_chars=10, help="Enter Texture Error"),
+        'Perimeter Error': st.text_input('Perimeter Error', key='perimeter_error', value='', max_chars=10, help="Enter Perimeter Error"),
+        'Area Error': st.text_input('Area Error', key='area_error', value='', max_chars=10, help="Enter Area Error"),
+        'Smoothness Error': st.text_input('Smoothness Error', key='smoothness_error', value='', max_chars=10, help="Enter Smoothness Error"),
+        'Compactness Error': st.text_input('Compactness Error', key='compactness_error', value='', max_chars=10, help="Enter Compactness Error"),
+        'Concavity Error': st.text_input('Concavity Error', key='concavity_error', value='', max_chars=10, help="Enter Concavity Error"),
+        'Concave Points Error': st.text_input('Concave Points Error', key='concave_points_error', value='', max_chars=10, help="Enter Concave Points Error"),
+        'Symmetry Error': st.text_input('Symmetry Error', key='symmetry_error', value='', max_chars=10, help="Enter Symmetry Error"),
+        'Fractal Dimension Error': st.text_input('Fractal Dimension Error', key='fractal_dimension_error', value='', max_chars=10, help="Enter Fractal Dimension Error")
+    }
 
 # Predict button
 if st.button('Predict'):
@@ -157,12 +168,12 @@ if st.button('Predict'):
 
         # Display the result
         result = 'Malignant' if prediction[0] == 1 else 'Benign'
-        st.subheader('KNN Prediction')
-        st.markdown(f'**Result**: {result}')
-        st.markdown(f'**Probability**: {prediction_proba[0][1]:.2f}')
+        st.write(f'KNN Prediction: {result}')
+        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2f}')
 
     except ValueError as e:
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
