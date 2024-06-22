@@ -105,10 +105,12 @@ if uploaded_files:
                 cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
                 cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
-                # Display the CNN prediction result
-                st.subheader('CNN Prediction')
-                st.markdown(f'**Result**: {cnn_result}')
-                st.markdown(f'**Confidence**: {cnn_confidence:.2%}')  # Display confidence in percentage
+                # Display the CNN prediction result with a white box
+                st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
+                            '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
+                            f'<p style="color:black;">Result: {cnn_result}</p>'
+                            f'<p style="color:black;">Confidence: {cnn_confidence:.2%}</p>'
+                            '</div>', unsafe_allow_html=True)
 
         except ValueError as e:
             st.sidebar.error(f"ValueError: {e}")
