@@ -80,7 +80,7 @@ parameters = {
     'Area Error': st.sidebar.text_input('Area Error'),
     'Smoothness Error': st.sidebar.text_input('Smoothness Error'),
     'Compactness Error': st.sidebar.text_input('Compactness Error'),
-    'Concavity's Error': st.sidebar.text_input('Concavity Error'),
+    'Concavity Error': st.sidebar.text_input('Concavity Error'),  # Corrected line
     'Concave Points Error': st.sidebar.text_input('Concave Points Error'),
     'Symmetry Error': st.sidebar.text_input('Symmetry Error'),
     'Fractal Dimension Error': st.sidebar.text_input('Fractal Dimension Error'),
@@ -95,6 +95,7 @@ parameters = {
     'Worst Symmetry': st.sidebar.text_input('Worst Symmetry'),
     'Worst Fractal Dimension': st.sidebar.text_input('Worst Fractal Dimension')
 }
+
 
 # Add a button to submit the data for prediction
 if st.sidebar.button('Predict'):
