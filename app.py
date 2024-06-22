@@ -5,7 +5,7 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from util import highlight_gray_range, create_highlighted_overlay, set_background
+from util import classify, set_background
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -102,12 +102,11 @@ if uploaded_file is not None:
             cnn_prediction = cnn_model.predict(image_array)
             cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
             cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-            cnn_confidence_percentage = cnn_confidence * 100  # Convert confidence to percentage
 
             # Display the CNN prediction result in a prominent way
             st.subheader('CNN Prediction')
             result_html = f'<p style="font-size: 24px; font-weight: bold;">Result: {cnn_result}</p>'
-            confidence_html = f'<p style="font-size: 20px;">Confidence: {cnn_confidence_percentage:.2f}%</p>'
+            confidence_html = f'<p style="font-size: 20px;">Confidence: {cnn_confidence:.2f}</p>'
             st.markdown(result_html, unsafe_allow_html=True)
             st.markdown(confidence_html, unsafe_allow_html=True)
 
@@ -119,50 +118,59 @@ if uploaded_file is not None:
 # Main Section for Breast Cancer Prediction Parameters Input
 st.title('Breast Cancer Prediction Parameters Input')
 
-# Information about each parameter
-parameters_info = {
-    'Mean Radius': 'Mean radius of the cell nuclei (mm)',
-    'Mean Texture': 'Mean texture of the cell nuclei (unitless)',
-    'Mean Perimeter': 'Mean perimeter of the cell nuclei (mm)',
-    'Mean Area': 'Mean area of the cell nuclei (mm^2)',
-    'Mean Smoothness': 'Mean smoothness of the cell nuclei (unitless)',
-    'Mean Compactness': 'Mean compactness of the cell nuclei (unitless)',
-    'Mean Concavity': 'Mean concavity of the cell nuclei (unitless)',
-    'Mean Concave Points': 'Mean number of concave portions of the contour of the cell nuclei (unitless)',
-    'Mean Symmetry': 'Mean symmetry of the cell nuclei (unitless)',
-    'Mean Fractal Dimension': 'Mean fractal dimension of the cell nuclei (unitless)',
-    'Radius Error': 'Standard error of the radius of the cell nuclei (mm)',
-    'Texture Error': 'Standard error of the texture of the cell nuclei (unitless)',
-    'Perimeter Error': 'Standard error of the perimeter of the cell nuclei (mm)',
-    'Area Error': 'Standard error of the area of the cell nuclei (mm^2)',
-    'Smoothness Error': 'Standard error of the smoothness of the cell nuclei (unitless)',
-    'Compactness Error': 'Standard error of the compactness of the cell nuclei (unitless)',
-    'Concavity Error': 'Standard error of the concavity of the cell nuclei (unitless)',
-    'Concave Points Error': 'Standard error of the concave points of the cell nuclei (unitless)',
-    'Symmetry Error': 'Standard error of the symmetry of the cell nuclei (unitless)',
-    'Fractal Dimension Error': 'Standard error of the fractal dimension of the cell nuclei (unitless)',
-    'Worst Radius': 'Worst (largest) radius of the cell nuclei (mm)',
-    'Worst Texture': 'Worst (highest) texture of the cell nuclei (unitless)',
-    'Worst Perimeter': 'Worst (largest) perimeter of the cell nuclei (mm)',
-    'Worst Area': 'Worst (largest) area of the cell nuclei (mm^2)',
-    'Worst Smoothness': 'Worst (highest) smoothness of the cell nuclei (unitless)',
-    'Worst Compactness': 'Worst (highest) compactness of the cell nuclei (unitless)',
-    'Worst Concavity': 'Worst (highest) concavity of the cell nuclei (unitless)',
-    'Worst Concave Points': 'Worst (highest) number of concave portions of the contour of the cell nuclei (unitless)',
-    'Worst Symmetry': 'Worst (highest) symmetry of the cell nuclei (unitless)',
-    'Worst Fractal Dimension': 'Worst (highest) fractal dimension of the cell nuclei (unitless)'
+# Define CSS for smaller text inputs
+st.markdown("""
+    <style>
+    .small-text-input {
+        font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Initialize parameters to 0
+parameters = {
+    'Mean Radius': '0',
+    'Mean Texture': '0',
+    'Mean Perimeter': '0',
+    'Mean Area': '0',
+    'Mean Smoothness': '0',
+    'Mean Compactness': '0',
+    'Mean Concavity': '0',
+    'Mean Concave Points': '0',
+    'Mean Symmetry': '0',
+    'Mean Fractal Dimension': '0',
+    'Radius Error': '0',
+    'Texture Error': '0',
+    'Perimeter Error': '0',
+    'Area Error': '0',
+    'Smoothness Error': '0',
+    'Compactness Error': '0',
+    'Concavity Error': '0',
+    'Concave Points Error': '0',
+    'Symmetry Error': '0',
+    'Fractal Dimension Error': '0',
+    'Worst Radius': '0',
+    'Worst Texture': '0',
+    'Worst Perimeter': '0',
+    'Worst Area': '0',
+    'Worst Smoothness': '0',
+    'Worst Compactness': '0',
+    'Worst Concavity': '0',
+    'Worst Concave Points': '0',
+    'Worst Symmetry': '0',
+    'Worst Fractal Dimension': '0'
 }
 
 # Layout with columns for text inputs
 col1, col2 = st.columns(2)
 
-# Define text inputs for parameters with smaller font size and include tooltips
+# Define text inputs for parameters with smaller font size
 with col1:
-    for key in list(parameters_info.keys())[:15]:
-        st.text_area(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, height=60, help=parameters_info[key])
+    for key in list(parameters.keys())[:15]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 with col2:
-    for key in list(parameters_info.keys())[15:]:
-        st.text_area(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, height=60, help=parameters_info[key])
+    for key in list(parameters.keys())[15:]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}")
 
 # Predict button
 if st.button('Predict'):
@@ -186,5 +194,4 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
-
 
