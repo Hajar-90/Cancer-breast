@@ -103,64 +103,59 @@ if st.sidebar.button('Predict'):
         st.write(f'KNN Prediction Probability: {prediction_proba[0]}')
 
         # Load and preprocess image for CNN prediction if model is loaded
-        if model_loaded:
-            uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+if model_loaded:
+    uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
-            if uploaded_file is not None:
-                # Load the image using PIL
-                image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
-                image_np = np.array(image)
+    if uploaded_file is not None:
+        try:
+            # Load the image using PIL
+            image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
+            image_np = np.array(image)
 
-                # Apply the gray range filter and get the mask
-                highlighted_image, mask = highlight_gray_range(image_np, 50, 150)  # Default values or adjust as needed
+            # Apply the gray range filter and get the mask
+            highlighted_image, mask = highlight_gray_range(image_np, 50, 150)  # Default values or adjust as needed
 
-                # Create the highlighted overlay with a specific color (e.g., red)
-                highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
-                highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
+            # Create the highlighted overlay with a specific color (e.g., red)
+            highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
+            highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-                # Display the original image
-                st.image(image_np, caption='Original Image', use_column_width=True, channels='GRAY')
+            # Display the original image
+            st.image(image_np, caption='Original Image', use_column_width=True, channels='GRAY')
 
-                # Display the highlighted image
-                st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
+            # Display the highlighted image
+            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
 
-                # Display the highlighted overlay
-                st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+            # Display the highlighted overlay
+            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
 
-                # Plot the mask and the highlighted overlay
-                fig, axs = plt.subplots(1, 2)
-                axs[0].imshow(mask, cmap='gray')
-                axs[0].set_title('Mask')
-                axs[0].axis('off')
+            # Plot the mask and the highlighted overlay
+            fig, axs = plt.subplots(1, 2)
+            axs[0].imshow(mask, cmap='gray')
+            axs[0].set_title('Mask')
+            axs[0].axis('off')
 
-                axs[1].imshow(highlighted_overlay)
-                axs[1].set_title('Highlighted Overlay')
-                axs[1].axis('off')
+            axs[1].imshow(highlighted_overlay)
+            axs[1].set_title('Highlighted Overlay')
+            axs[1].axis('off')
 
-                # Show the plot
-                st.pyplot(fig)
+            # Show the plot
+            st.pyplot(fig)
 
-                # Preprocess the image for the CNN model
-                image_rgb = image.convert('RGB')  # Convert to RGB
-                image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
-                image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
+            # Preprocess the image for the CNN model
+            image_rgb = image.convert('RGB')  # Convert to RGB
+            image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
+            image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
 
-                # Make a prediction using the CNN model
-                cnn_prediction = cnn_model.predict(image_array)
-                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+            # Make a prediction using the CNN model
+            cnn_prediction = cnn_model.predict(image_array)
+            cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+            cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
 
-                # Display the CNN prediction result
-                st.write(f'CNN Prediction: **{cnn_result}**')
-                st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
+            # Display the CNN prediction result
+            st.write(f'CNN Prediction: **{cnn_result}**')
+            st.write(f'CNN Prediction Confidence: {cnn_confidence:.2f}')
 
-    except ValueError as e:
-        st.error(f"ValueError: {e}")
-    except Exception as e:
-        st.error(f"An unexpected error occurred during prediction: {e}")
-
-
-
-
-
-
+        except ValueError as e:
+            st.error(f"ValueError: {e}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred during image processing or prediction: {e}")
