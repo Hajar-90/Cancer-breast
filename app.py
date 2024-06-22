@@ -3,9 +3,7 @@ import tensorflow as tf
 from keras.models import load_model
 from PIL import Image
 import numpy as np
-import matplotlib.pyplot as plt
 import joblib
-from util import classify, set_background
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -39,48 +37,49 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-set_background('bgs/bg5.jpg')
 
-# Title and Sidebar for Mammogram Analysis
-st.title('Breast Cancer Classification')
-uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+# Title and Sidebar for CNN Prediction
+st.title('CNN Breast Cancer Prediction')
 
-if uploaded_file is not None:
-    st.sidebar.markdown('### Select Gray Range')
-    gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
-    gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
+# Display CNN prediction box
+if model_loaded:
+    uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
-    show_original = st.sidebar.checkbox("Show Original Image", value=True)
-    show_highlighted = st.sidebar.checkbox("Show Highlighted Image")
-    show_overlay = st.sidebar.checkbox("Show Highlighted Overlay")
+    if uploaded_file is not None:
+        st.markdown("---")
+        st.markdown("### Select Gray Range")
+        gray_lower = st.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
+        gray_upper = st.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
 
-    try:
-        # Load the image using PIL
-        image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
-        image_np = np.array(image)
+        show_original = st.checkbox("Show Original Image", value=True)
+        show_highlighted = st.checkbox("Show Highlighted Image")
+        show_overlay = st.checkbox("Show Highlighted Overlay")
 
-        # Resize image to fit display
-        image_resized = image.resize((500, 500))
+        try:
+            # Load the image using PIL
+            image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
+            image_np = np.array(image)
 
-        # Apply the gray range filter and get the mask
-        highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
+            # Resize image to fit display
+            image_resized = image.resize((500, 500))
 
-        # Create the highlighted overlay with a specific color (e.g., red)
-        highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
-        highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
+            # Apply the gray range filter and get the mask
+            highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
 
-        # Display images based on user selection
-        if show_original:
-            st.image(image_resized, caption='Original Image', use_column_width=True, channels='GRAY')
-        
-        if show_highlighted:
-            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
-        
-        if show_overlay:
-            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+            # Create the highlighted overlay with a specific color (e.g., red)
+            highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
+            highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
 
-        # Display CNN prediction before images
-        if model_loaded:
+            # Display images based on user selection
+            if show_original:
+                st.image(image_resized, caption='Original Image', use_column_width=True, channels='L')
+
+            if show_highlighted:
+                st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='L')
+
+            if show_overlay:
+                st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+
             # Preprocess the image for the CNN model
             image_rgb = image.convert('RGB')  # Convert to RGB
             image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
@@ -90,7 +89,7 @@ if uploaded_file is not None:
             cnn_prediction = cnn_model.predict(image_array)
             cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
             cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-            cnn_confidence=cnn_confidence*100
+            cnn_confidence *= 100
 
             # Determine the appropriate emoji based on confidence level
             if cnn_confidence >= 90:
@@ -103,28 +102,20 @@ if uploaded_file is not None:
                 emoji = '😕'  # Confused face for lower confidence
 
             # Display the CNN prediction result with styled box
+            st.markdown("---")
             st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
                         '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
                         f'<p style="color:black;">Result: {cnn_result}</p>'
                         f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
                         '</div>', unsafe_allow_html=True)
 
-    except ValueError as e:
-        st.sidebar.error(f"ValueError: {e}")
-    except Exception as e:
-        st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
+        except ValueError as e:
+            st.error(f"ValueError: {e}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred during image processing or prediction: {e}")
 
 # Main Section for Breast Cancer Prediction Parameters Input
-st.title('Breast Cancer Prediction Parameters Input')
-
-# Define CSS for smaller text inputs
-st.markdown("""
-    <style>
-    .small-text-input {
-        font-size: 14px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+st.title('KNN Breast Cancer Prediction')
 
 # Initialize parameters to 0
 parameters = {
