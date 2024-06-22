@@ -50,6 +50,8 @@ if uploaded_file is not None:
     gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
     gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
 
+    show_extra_images = st.sidebar.checkbox("Show Extra Images")
+
     try:
         # Load the image using PIL
         image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
@@ -86,6 +88,11 @@ if uploaded_file is not None:
 
         # Show the plot
         st.pyplot(fig)
+
+        if show_extra_images:
+            # Add logic to display extra images
+            st.header('Extra Images')
+            st.markdown('Placeholder for displaying extra images based on user selection.')
 
         if model_loaded:
             # Preprocess the image for the CNN model
