@@ -1,57 +1,191 @@
-import tensorflow as tf
-import numpy as np
 import streamlit as st
+import tensorflow as tf
+from keras.models import load_model
 from PIL import Image
+import numpy as np
 import matplotlib.pyplot as plt
-from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
-from tensorflow.keras.models import Model
+import joblib
+from util import highlight_gray_range, create_highlighted_overlay, set_background
 
-# Load pre-trained ResNet50 model for demonstration
-model = tf.keras.applications.ResNet50(weights='imagenet')
-model = Model(inputs=model.input, outputs=(model.layers[-3].output, model.output))
+# Load KNN model and scaler
+knn = joblib.load('knn_model.pkl')
+scaler = joblib.load('scaler.pkl')
 
-# Function to generate Grad-CAM heatmap
-def generate_gradcam(image_path):
-    img = tf.keras.preprocessing.image.load_img(image_path, target_size=(224, 224))
-    x = tf.keras.preprocessing.image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
-    x = preprocess_input(x)
+# Load CNN model with error handling
+model_loaded = False
+try:
+    cnn_model = tf.keras.models.load_model('oneone.keras')
+    model_loaded = True
+except FileNotFoundError:
+    st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
+except Exception as e:
+    st.error(f"An unexpected error occurred: {e}")
 
-    with tf.GradientTape() as tape:
-        last_conv_layer, preds = model(x)
-        top_pred_index = tf.argmax(preds[0])
-        top_class_channel = preds[:, top_pred_index]
+# Function to highlight the gray range
+def highlight_gray_range(image_np, gray_lower, gray_upper):
+    mask = (image_np >= gray_lower) & (image_np <= gray_upper)
+    highlighted_image = np.where(mask, image_np, 0)
+    return highlighted_image, mask
 
-    grads = tape.gradient(top_class_channel, last_conv_layer)
-    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-    last_conv_layer_output = last_conv_layer[0]
-    heatmap = tf.reduce_mean(tf.multiply(last_conv_layer_output, pooled_grads), axis=-1)
-    heatmap = np.maximum(heatmap, 0)
-    heatmap /= np.max(heatmap)
-    return heatmap.numpy()
+# Function to create the highlighted overlay
+def create_highlighted_overlay(original_image, highlighted_region, mask, highlight_color):
+    overlay = np.stack((original_image,) * 3, axis=-1)  # Convert to RGB
+    overlay[np.where(mask)] = highlight_color
+    return overlay
 
-# Streamlit app
-st.title('CNN Prediction Visualization with Grad-CAM')
-uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png"])
+# Main Streamlit app settings
+st.set_page_config(
+    page_title="Breast Cancer Classification",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-if uploaded_file is not None:
-    st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+# Set background and title
+set_background('bgs/bg5.jpg')
+st.title('Breast Cancer Classification')
 
-    # Generate Grad-CAM heatmap
-    image = Image.open(uploaded_file)
-    heatmap = generate_gradcam(uploaded_file)
+# Sidebar for Mammogram Analysis
+with st.sidebar:
+    st.markdown('## Mammogram Analysis')
+    uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
+    if uploaded_file is not None:
+        st.markdown('### Select Gray Range')
+        gray_lower = st.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
+        gray_upper = st.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
 
-    # Plot Grad-CAM heatmap
-    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
-    axs[0].imshow(image)
-    axs[0].axis('off')
-    axs[0].set_title('Original Image')
+        try:
+            # Load the image using PIL
+            image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
+            image_np = np.array(image)
 
-    axs[1].imshow(heatmap, cmap='jet', alpha=0.6)
-    axs[1].imshow(image, alpha=0.4)
-    axs[1].axis('off')
-    axs[1].set_title('Grad-CAM Heatmap')
+            # Apply the gray range filter and get the mask
+            highlighted_image, mask = highlight_gray_range(image_np, gray_lower, gray_upper)
 
-    st.pyplot(fig)
+            # Create the highlighted overlay with a specific color (e.g., red)
+            highlight_color = [255, 0, 0]  # Red color for the highlighted overlay
+            highlighted_overlay = create_highlighted_overlay(image_np, highlighted_image, mask, highlight_color)
+
+            # Display the original image
+            st.image(image_np, caption='Original Image', use_column_width=True, channels='GRAY')
+
+            # Display the highlighted image
+            st.image(highlighted_image, caption='Highlighted Image', use_column_width=True, channels='GRAY')
+
+            # Display the highlighted overlay
+            st.image(highlighted_overlay, caption='Highlighted Overlay', use_column_width=True)
+
+            # Plot the mask and the highlighted overlay
+            fig, axs = plt.subplots(1, 2)
+            axs[0].imshow(mask, cmap='gray')
+            axs[0].set_title('Mask')
+            axs[0].axis('off')
+
+            axs[1].imshow(highlighted_overlay)
+            axs[1].set_title('Highlighted Overlay')
+            axs[1].axis('off')
+
+            # Show the plot
+            st.pyplot(fig)
+
+            if model_loaded:
+                # Preprocess the image for the CNN model
+                image_rgb = image.convert('RGB')  # Convert to RGB
+                image_resized = image_rgb.resize((224, 224))  # Resize to the input size the CNN expects
+                image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize the image
+
+                # Make a prediction using the CNN model
+                cnn_prediction = cnn_model.predict(image_array)
+                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+
+                # Display the CNN prediction result
+                st.subheader('CNN Prediction')
+                st.markdown(f'**Result**: {cnn_result}')
+                st.markdown(f'**Confidence**: {cnn_confidence:.2f}')
+
+        except ValueError as e:
+            st.error(f"ValueError: {e}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred during image processing or prediction: {e}")
+
+# Main Section for Breast Cancer Prediction Parameters
+st.title('Breast Cancer Prediction Parameters Input')
+
+# Define CSS for smaller text inputs
+st.markdown("""
+    <style>
+    .small-text-input {
+        font-size: 14px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Initialize parameters to 0
+parameters = {
+    'Mean Radius': '0',
+    'Mean Texture': '0',
+    'Mean Perimeter': '0',
+    'Mean Area': '0',
+    'Mean Smoothness': '0',
+    'Mean Compactness': '0',
+    'Mean Concavity': '0',
+    'Mean Concave Points': '0',
+    'Mean Symmetry': '0',
+    'Mean Fractal Dimension': '0',
+    'Radius Error': '0',
+    'Texture Error': '0',
+    'Perimeter Error': '0',
+    'Area Error': '0',
+    'Smoothness Error': '0',
+    'Compactness Error': '0',
+    'Concavity Error': '0',
+    'Concave Points Error': '0',
+    'Symmetry Error': '0',
+    'Fractal Dimension Error': '0',
+    'Worst Radius': '0',
+    'Worst Texture': '0',
+    'Worst Perimeter': '0',
+    'Worst Area': '0',
+    'Worst Smoothness': '0',
+    'Worst Compactness': '0',
+    'Worst Concavity': '0',
+    'Worst Concave Points': '0',
+    'Worst Symmetry': '0',
+    'Worst Fractal Dimension': '0'
+}
+
+# Layout with columns for text inputs
+col1, col2 = st.columns(2)
+
+# Define text inputs for parameters with smaller font size
+with col1:
+    for key in list(parameters.keys())[:15]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
+with col2:
+    for key in list(parameters.keys())[15:]:
+        parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10, help=f"Enter {key}", class_='small-text-input')
+
+# Predict button
+if st.button('Predict'):
+    try:
+        # Collect the entered data
+        data = np.array(list(parameters.values()), dtype=float).reshape(1, -1)
+
+        # Scale the input data
+        data_scaled = scaler.transform(data)
+
+        # Make a prediction
+        prediction = knn.predict(data_scaled)
+        prediction_proba = knn.predict_proba(data_scaled)
+
+        # Display the result
+        result = 'Malignant' if prediction[0] == 1 else 'Benign'
+        st.write(f'KNN Prediction: {result}')
+        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2f}')
+
+    except ValueError as e:
+        st.error(f"ValueError: {e}")
+    except Exception as e:
+        st.error(f"An unexpected error occurred during prediction: {e}")
 
 
