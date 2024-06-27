@@ -3,7 +3,7 @@ import streamlit as st
 import tensorflow as tf
 
 # Define absolute path to the .keras file
-model_path = '/mount/src/Cancer-breast/oneone.keras'
+model_path = 'oneone.keras'
 
 # Load CNN model with error handling
 model_loaded = False
