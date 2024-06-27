@@ -43,12 +43,7 @@ def set_background(background_path):
 # Main function to run the Streamlit app
 def main():
     # Set page configuration and background
-    st.set_page_config(
-        page_title="Breast Cancer Classification",
-        layout="wide",
-        initial_sidebar_state="expanded"
-    )
-    set_background('bgs/bg5.jpg')
+    set_page_config_once()
 
     # Title and Sidebar for Mammogram Analysis
     st.title('Breast Cancer Classification')
@@ -111,27 +106,30 @@ def main():
                 image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
 
                 # Make a prediction using the CNN model
-                cnn_prediction = cnn_model.predict(image_array)
-                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-                cnn_confidence *= 100
+                try:
+                    cnn_prediction = cnn_model.predict(image_array)
+                    cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+                    cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+                    cnn_confidence *= 100
 
-                # Determine the appropriate emoji based on confidence level
-                if cnn_confidence >= 90:
-                    emoji = '✔️'  # Checkmark for high confidence
-                elif cnn_confidence >= 80:
-                    emoji = '😊'  # Smiling face for good confidence
-                elif cnn_confidence >= 70:
-                    emoji = '😐'  # Neutral face for moderate confidence
-                else:
-                    emoji = '😕'  # Confused face for lower confidence
+                    # Determine the appropriate emoji based on confidence level
+                    if cnn_confidence >= 90:
+                        emoji = '✔️'  # Checkmark for high confidence
+                    elif cnn_confidence >= 80:
+                        emoji = '😊'  # Smiling face for good confidence
+                    elif cnn_confidence >= 70:
+                        emoji = '😐'  # Neutral face for moderate confidence
+                    else:
+                        emoji = '😕'  # Confused face for lower confidence
 
-                # Display the CNN prediction result with styled box
-                st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                            '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                            f'<p style="color:black;">Result: {cnn_result}</p>'
-                            f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
-                            '</div>', unsafe_allow_html=True)
+                    # Display the CNN prediction result with styled box
+                    st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
+                                '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
+                                f'<p style="color:black;">Result: {cnn_result}</p>'
+                                f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
+                                '</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"An unexpected error occurred during CNN prediction: {e}")
 
         except ValueError as e:
             st.sidebar.error(f"ValueError: {e}")
@@ -212,8 +210,16 @@ def main():
         except Exception as e:
             st.error(f"An unexpected error occurred during prediction: {e}")
 
+# Function to set page configuration and background image
+def set_page_config_once():
+    st.set_page_config(
+        page_title="Breast Cancer Classification",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    set_background('bgs/bg5.jpg')  # Adjust path as per your directory structure
+
 if __name__ == '__main__':
     main()
-
 
 
