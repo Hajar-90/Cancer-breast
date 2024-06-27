@@ -1,12 +1,16 @@
+import os
+import streamlit as st
 import tensorflow as tf
 
-# Assuming cnn_model is your loaded Keras model
-cnn_model = tf.keras.models.load_model('oneone.keras')
+# Absolute path to the .keras file
+model_path = 'oneone.keras'
 
-# Example of flattening output before dense layers
-flatten_layer = tf.keras.layers.Flatten()(cnn_model.output)
-dense_layer = tf.keras.layers.Dense(units=128, activation='relu')(flatten_layer)
-output_layer = tf.keras.layers.Dense(units=1, activation='sigmoid')(dense_layer)
-
-# Create a new model with modified layers
-modified_model = tf.keras.Model(inputs=cnn_model.input, outputs=output_layer)
+# Load CNN model with error handling
+model_loaded = False
+try:
+    cnn_model = tf.keras.models.load_model(model_path)
+    model_loaded = True
+except FileNotFoundError:
+    st.error(f"CNN model file '{model_path}' not found. Please ensure the file exists.")
+except Exception as e:
+    st.error(f"An unexpected error occurred: {e}")
