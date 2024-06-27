@@ -1,36 +1,38 @@
 import streamlit as st
-import cv2
+import tensorflow as tf
+from keras.models import load_model
+from PIL import Image
 import numpy as np
-from tensorflow.keras.models import load_model
+import matplotlib.pyplot as plt
+import joblib
 
-# Load the Keras model
-model = load_model('/content/drive/MyDrive/finy.keras')
+# Load KNN model and scaler
+knn = joblib.load('knn_model.pkl')
+scaler = joblib.load('scaler.pkl')
 
-# Function to preprocess the image
-def preprocess_image(image_path):
-    # Load the image in RGB
-    img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    # Resize the image to match the input shape of the model
-    img = cv2.resize(img, (224, 224))
-    # Normalize the pixel values to be in the range [0, 1]
-    img = img / 255.0
-    # Add a batch dimension
-    img = np.expand_dims(img, axis=0)
-    return img
+# Load CNN model with error handling
+model_loaded = False
+try:
+    cnn_model = tf.keras.models.load_model('oneone.keras')
+    model_loaded = True
+except FileNotFoundError:
+    st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
+except Exception as e:
+    st.error(f"An unexpected error occurred: {e}")
 
-# Function to make predictions on the preprocessed image
-def predict_image(image_path):
-    # Preprocess the image
-    img = preprocess_image(image_path)
-    # Make predictions using the model
-    predictions = model.predict(img)
-    # Convert the predicted probabilities to class labels
-    predicted_class = 1 if predictions[0][0] > 0.5 else 0
-    # Calculate confidence
-    confidence = predictions[0][0] * 100 if predicted_class == 1 else (1 - predictions[0][0]) * 100
-    return predicted_class, confidence
+# Function to highlight the gray range
+def highlight_gray_range(image_np, gray_lower, gray_upper):
+    mask = (image_np >= gray_lower) & (image_np <= gray_upper)
+    highlighted_image = np.where(mask, image_np, 0)
+    return highlighted_image, mask
 
-# Main Streamlit app
+# Function to create the highlighted overlay
+def create_highlighted_overlay(original_image, highlighted_region, mask, highlight_color):
+    overlay = np.stack((original_image,) * 3, axis=-1)  # Convert to RGB
+    overlay[np.where(mask)] = highlight_color
+    return overlay
+
+# Main streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
     layout="wide",
@@ -43,6 +45,14 @@ uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg"
 
 # Display uploaded image and processing
 if uploaded_file is not None:
+    st.sidebar.markdown('### Select Gray Range')
+    gray_lower = st.sidebar.slider('Lower Bound of Gray Range', min_value=0, max_value=255, value=50, step=1, format='%d')
+    gray_upper = st.sidebar.slider('Upper Bound of Gray Range', min_value=0, max_value=255, value=150, step=1, format='%d')
+
+    show_original = st.sidebar.checkbox("Show Original Image", value=True)
+    show_highlighted = st.sidebar.checkbox("Show Highlighted Image")
+    show_overlay = st.sidebar.checkbox("Show Highlighted Overlay")
+
     try:
         # Load the image using PIL
         image = Image.open(uploaded_file).convert('L')  # Convert to grayscale
@@ -88,10 +98,7 @@ if uploaded_file is not None:
                 # Preprocess the image for the CNN model
                 image_rgb = image.convert('RGB')  # Convert to RGB
                 image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-                image_array = np.array(image_resized_cnn) / 255.0  # Normalize
-
-                # Reshape the image array to match model input shape
-                image_array = np.expand_dims(image_array, axis=0)
+                image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
 
                 # Make a prediction using the CNN model
                 cnn_prediction = cnn_model.predict(image_array)
@@ -120,21 +127,6 @@ if uploaded_file is not None:
                 st.sidebar.error(f"ValueError: {e}")
             except Exception as e:
                 st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
-
-        # Make predictions using the uploaded image
-        predicted_class, confidence = predict_image(uploaded_file)
-
-        # Map the predicted class label to the corresponding class name
-        label_mapping = {
-            0: 'Benign',
-            1: 'Malignant'
-        }
-        predicted_class_name = label_mapping[predicted_class]
-
-        # Display the prediction result
-        st.subheader("Breast Cancer Prediction")
-        st.write(f'Prediction: {predicted_class_name}')
-        st.write(f'Confidence: {confidence:.2f}%')
 
     except ValueError as e:
         st.sidebar.error(f"ValueError: {e}")
@@ -192,41 +184,27 @@ with col2:
         parameters[key] = st.text_input(key, key=key.lower().replace(' ', '_'), value='0', max_chars=10,
                                         help=f"{parameter_info[key]}")
 
-# Predict button with a single column
-col3 = st.columns(1)[0]
-
-# Execute prediction
-if col3.button('Predict'):
-    # Predict button with a single column
-      col3 = st.columns(1)[0]
-
-# Execute prediction
-if col3.button('Predict'):
-    # Loading the current parameters and requesting the right predictions
+# Predict button
+if st.button('Predict'):
     try:
-        # Preprocess the input data
+        # Collect the entered data
         data = np.array(list(parameters.values()), dtype=float).reshape(1, -1)
 
         # Scale the input data
         data_scaled = scaler.transform(data)
 
-        # Execute the KNN model for predictions
+        # Make a prediction
         prediction = knn.predict(data_scaled)
+        prediction_proba = knn.predict_proba(data_scaled)
 
         # Display the result
-        if prediction[0] == 1:
-            result = 'Malignant'
-        else:
-            result = 'Benign'
-        
-        # Show the predicted class and the corresponding probability
+        result = 'Malignant' if prediction[0] == 1 else 'Benign'
         st.write(f'KNN Prediction: {result}')
-        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2%}')
+        st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2%}')  # Display probability in percentage
 
     except Exception as e:
-        st.error(f"An unexpected error occurred during the prediction: {e}")
+        st.error(f"An unexpected error occurred during prediction: {e}")
 
-    # Loading the current parameters and requesting the right predictions
 
 
 
