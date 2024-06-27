@@ -22,7 +22,7 @@ st.set_page_config(
 st.title('Breast Cancer Classification')
 
 # Sidebar for Mammogram Analysis
-uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png","pgm"])
 
 if uploaded_file is not None:
     try:
