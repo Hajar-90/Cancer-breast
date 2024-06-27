@@ -7,4 +7,6 @@ numpy
 joblib 
 scikit-learn 
 matplotlib
-upgrade tensorflow keras
+pip install --upgrade tensorflow
+pip install --upgrade keras
+
