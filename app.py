@@ -1,10 +1,10 @@
 import streamlit as st
 import tensorflow as tf
-from keras.preprocessing import image
+from keras.models import load_model
+from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from PIL import Image
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -20,14 +20,6 @@ except FileNotFoundError:
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
-# Function to preprocess image for CNN model
-def preprocess_image(image_path):
-    img = image.load_img(image_path, target_size=(224, 224))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0)
-    img_array /= 255.0  # Normalize the image
-    return img_array
-
 # Function to highlight the gray range
 def highlight_gray_range(image_np, gray_lower, gray_upper):
     mask = (image_np >= gray_lower) & (image_np <= gray_upper)
@@ -40,10 +32,11 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
     overlay[np.where(mask)] = highlight_color
     return overlay
 
-# Streamlit app
+# Main streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # Title and Sidebar for Mammogram Analysis
@@ -101,33 +94,39 @@ if uploaded_file is not None:
 
         # Display CNN prediction for the uploaded image
         if model_loaded:
-            # Preprocess the image for the CNN model
-            image_rgb = image.convert('RGB')  # Convert to RGB
-            image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-            image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
+            try:
+                # Preprocess the image for the CNN model
+                image_rgb = image.convert('RGB')  # Convert to RGB
+                image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
+                image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
 
-            # Make a prediction using the CNN model
-            cnn_prediction = cnn_model.predict(image_array)
-            cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
-            cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
-            cnn_confidence *= 100
+                # Make a prediction using the CNN model
+                cnn_prediction = cnn_model.predict(image_array)
+                cnn_result = 'Malignant' if cnn_prediction[0][0] > 0.5 else 'Benign'
+                cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
+                cnn_confidence *= 100
 
-            # Determine the appropriate emoji based on confidence level
-            if cnn_confidence >= 90:
-                emoji = '✔️'  # Checkmark for high confidence
-            elif cnn_confidence >= 80:
-                emoji = '😊'  # Smiling face for good confidence
-            elif cnn_confidence >= 70:
-                emoji = '😐'  # Neutral face for moderate confidence
-            else:
-                emoji = '😕'  # Confused face for lower confidence
+                # Determine the appropriate emoji based on confidence level
+                if cnn_confidence >= 90:
+                    emoji = '✔️'  # Checkmark for high confidence
+                elif cnn_confidence >= 80:
+                    emoji = '😊'  # Smiling face for good confidence
+                elif cnn_confidence >= 70:
+                    emoji = '😐'  # Neutral face for moderate confidence
+                else:
+                    emoji = '😕'  # Confused face for lower confidence
 
-            # Display the CNN prediction result with styled box
-            st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                        '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                        f'<p style="color:black;">Result: {cnn_result}</p>'
-                        f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
-                        '</div>', unsafe_allow_html=True)
+                # Display the CNN prediction result with styled box
+                st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
+                            '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
+                            f'<p style="color:black;">Result: {cnn_result}</p>'
+                            f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
+                            '</div>', unsafe_allow_html=True)
+
+            except ValueError as e:
+                st.sidebar.error(f"ValueError: {e}")
+            except Exception as e:
+                st.sidebar.error(f"An unexpected error occurred during image processing or prediction: {e}")
 
     except ValueError as e:
         st.sidebar.error(f"ValueError: {e}")
@@ -205,5 +204,6 @@ if st.button('Predict'):
 
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
 
