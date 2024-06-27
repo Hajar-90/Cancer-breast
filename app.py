@@ -99,7 +99,9 @@ if uploaded_file is not None:
             # Preprocess the image for the CNN model
             image_rgb = image.convert('RGB')  # Convert to RGB
             image_resized_cnn = image_rgb.resize((224, 224))  # Resize for CNN input
-            image_array = np.array(image_resized_cnn).reshape((1, 224, 224, 3)) / 255.0  # Normalize
+            image_array = np.array(image_resized_cnn)  # Convert to numpy array
+            image_array = image_array.reshape((1, 224, 224, 3)) / 255.0  # Reshape and normalize
+
 
             # Make a prediction using the CNN model
             cnn_prediction = cnn_model.predict(image_array)
