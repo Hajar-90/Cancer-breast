@@ -5,7 +5,6 @@ from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from util import classify, set_background
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -36,10 +35,8 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
 # Main streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
-set_background('bgs/bg5.jpg')
 
 # Title and Sidebar for Mammogram Analysis
 st.title('Breast Cancer Classification')
@@ -198,7 +195,6 @@ if st.button('Predict'):
         st.write(f'KNN Prediction: {result}')
         st.write(f'KNN Prediction Probability: {prediction_proba[0][1]:.2%}')  # Display probability in percentage
 
-    except ValueError as e:
-        st.error(f"ValueError: {e}")
     except Exception as e:
-        st.error(f"An unexpected error occurred during prediction: {e}") 
+        st.error(f"An unexpected error occurred during prediction: {e}")
+
