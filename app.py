@@ -1,20 +1,12 @@
 import streamlit as st
 import tensorflow as tf
-from keras.models import load_model
-from PIL import Image
 import numpy as np
+from PIL import Image
 import matplotlib.pyplot as plt
 import joblib
-from util import classify, set_background
+import os
 
-# Set page configuration (called once, first in script)
-st.set_page_config(
-    page_title="Breast Cancer Classification",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Load models and other necessary imports
+# Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
 scaler = joblib.load('scaler.pkl')
 
@@ -40,8 +32,24 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
     overlay[np.where(mask)] = highlight_color
     return overlay
 
-# Main streamlit app logic
+# Function to set background image
+def set_background(background_path):
+    if os.path.exists(background_path):
+        st.markdown(
+            f'<style>body {{ background-image: url("{background_path}"); background-size: cover; }}</style>',
+            unsafe_allow_html=True
+        )
+
+# Main function to run the Streamlit app
 def main():
+    # Set page configuration and background
+    st.set_page_config(
+        page_title="Breast Cancer Classification",
+        layout="wide",
+        initial_sidebar_state="expanded"
+    )
+    set_background('bgs/bg5.jpg')
+
     # Title and Sidebar for Mammogram Analysis
     st.title('Breast Cancer Classification')
     uploaded_file = st.sidebar.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
@@ -204,8 +212,8 @@ def main():
         except Exception as e:
             st.error(f"An unexpected error occurred during prediction: {e}")
 
-# Entry point of the app
 if __name__ == '__main__':
     main()
+
 
 
