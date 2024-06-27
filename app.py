@@ -1,10 +1,10 @@
 import streamlit as st
 import tensorflow as tf
-from keras.models import load_model
-from PIL import Image
+from keras.preprocessing import image
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
+from PIL import Image
 
 # Load KNN model and scaler
 knn = joblib.load('knn_model.pkl')
@@ -20,6 +20,14 @@ except FileNotFoundError:
 except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
+# Function to preprocess image for CNN model
+def preprocess_image(image_path):
+    img = image.load_img(image_path, target_size=(224, 224))
+    img_array = image.img_to_array(img)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array /= 255.0  # Normalize the image
+    return img_array
+
 # Function to highlight the gray range
 def highlight_gray_range(image_np, gray_lower, gray_upper):
     mask = (image_np >= gray_lower) & (image_np <= gray_upper)
@@ -32,7 +40,7 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
     overlay[np.where(mask)] = highlight_color
     return overlay
 
-# Main streamlit app
+# Streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
     layout="wide"
@@ -197,4 +205,5 @@ if st.button('Predict'):
 
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
