@@ -1,8 +1,7 @@
-import os
 import streamlit as st
 import tensorflow as tf
 
-# Define absolute path to the .keras file
+# Example of specifying full path
 model_path = 'oneone.keras'
 
 # Load CNN model with error handling
