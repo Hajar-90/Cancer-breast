@@ -16,3 +16,8 @@ except Exception as e:
     st.error(f"An unexpected error occurred: {e}")
 
 
+my_list = []
+if my_list:
+    element = my_list.pop()
+else:
+    print("List is empty, cannot pop.")
