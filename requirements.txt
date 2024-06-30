@@ -2,7 +2,7 @@ opencv-python
 streamlit 
 Pillow 
 numpy 
-joblib 
+joblib
 scikit-learn 
 matplotlib
 tensorflow
