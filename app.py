@@ -33,7 +33,7 @@ def create_highlighted_overlay(original_image, highlighted_region, mask, highlig
     overlay[np.where(mask)] = highlight_color
     return overlay
 
-# Main streamlit app
+# Main Streamlit app
 st.set_page_config(
     page_title="Breast Cancer Classification",
     layout="wide",
@@ -202,3 +202,4 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
