@@ -23,7 +23,8 @@ if uploaded_file is not None and model_loaded:
 
         # Preprocess the image for the CNN model
         image_resized = image.resize((224, 224))  # Resize for CNN input
-        image_array = np.array(image_resized).reshape((1, 224, 224, 3)) / 255.0  # Normalize
+        image_array = np.array(image_resized)  # Convert to numpy array
+        image_array = image_array.reshape((1, 224, 224, 3)) / 255.0  # Normalize
 
         # Make a prediction using the CNN model
         cnn_prediction = cnn_model.predict(image_array)
@@ -37,3 +38,4 @@ if uploaded_file is not None and model_loaded:
 
     except Exception as e:
         st.error(f"Error during image processing or prediction: {e}")
+
