@@ -1,9 +1,10 @@
 opencv-python
-streamlit 
-Pillow 
-numpy 
 joblib
 scikit-learn 
 matplotlib
-tensorflow
 keras
+tensorflow==2.10.0
+streamlit==1.22.0
+pillow==9.3.0
+numpy==1.22.4
+
