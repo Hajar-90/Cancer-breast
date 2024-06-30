@@ -1,9 +1,9 @@
+tensorflow
 opencv-python
 joblib
 scikit-learn
 matplotlib
 keras
-tensorflow==2.14.0  # Update to a compatible version
 streamlit
 pillow
 numpy
