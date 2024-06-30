@@ -3,13 +3,18 @@ import tensorflow as tf
 from PIL import Image
 import numpy as np
 
+# Specify the absolute path to your model file
+cnn_model_path = 'oneone.keras'  # Update with your actual file path
+
 # Load CNN model with error handling
 model_loaded = False
 try:
-    cnn_model = tf.keras.models.load_model('oneone.keras')
+    cnn_model = tf.keras.models.load_model(cnn_model_path)
     model_loaded = True
+except FileNotFoundError:
+    st.error(f"CNN model file '{cnn_model_path}' not found. Please upload the model file.")
 except Exception as e:
-    st.error(f"Error loading model: {e}")
+    st.error(f"An unexpected error occurred: {e}")
 
 # Main Streamlit app
 st.title('Breast Cancer Classification')
