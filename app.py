@@ -1,6 +1,6 @@
 import streamlit as st
 import tensorflow as tf
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ scaler = joblib.load('scaler.pkl')
 # Load CNN model with error handling
 model_loaded = False
 try:
-    cnn_model = tf.keras.models.load_model('oneone.keras')
+    cnn_model = load_model('oneone.keras')
     model_loaded = True
 except FileNotFoundError:
     st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
@@ -202,4 +202,5 @@ if st.button('Predict'):
         st.error(f"ValueError: {e}")
     except Exception as e:
         st.error(f"An unexpected error occurred during prediction: {e}")
+
 
