@@ -9,10 +9,8 @@ model_loaded = False
 try:
     cnn_model = load_model('oneone.keras')
     model_loaded = True
-except FileNotFoundError:
-    st.error("CNN model file 'oneone.keras' not found. Please upload the model file.")
 except Exception as e:
-    st.error(f"An unexpected error occurred: {e}")
+    st.error(f"Error loading model: {e}")
 
 # Main Streamlit app
 st.set_page_config(
@@ -40,22 +38,9 @@ if uploaded_file is not None and model_loaded:
         cnn_confidence = cnn_prediction[0][0] if cnn_result == 'Malignant' else 1 - cnn_prediction[0][0]
         cnn_confidence *= 100
 
-        # Determine the appropriate emoji based on confidence level
-        if cnn_confidence >= 90:
-            emoji = '✔️'  # Checkmark for high confidence
-        elif cnn_confidence >= 80:
-            emoji = '😊'  # Smiling face for good confidence
-        elif cnn_confidence >= 70:
-            emoji = '😐'  # Neutral face for moderate confidence
-        else:
-            emoji = '😕'  # Confused face for lower confidence
-
-        # Display the CNN prediction result with styled box
-        st.markdown('<div style="background-color:white; padding:10px; border-radius:10px;">'
-                    '<p style="color:black; font-size:18px; font-weight:bold;">CNN Prediction</p>'
-                    f'<p style="color:black;">Result: {cnn_result}</p>'
-                    f'<p style="color:black;">Confidence: {cnn_confidence:.2f}% {emoji}</p>'
-                    '</div>', unsafe_allow_html=True)
+        # Display the CNN prediction result
+        st.write(f'Prediction: {cnn_result}')
+        st.write(f'Confidence: {cnn_confidence:.2f}%')
 
     except Exception as e:
-        st.error(f"An unexpected error occurred during image processing or prediction: {e}")
+        st.error(f"Error during image processing or prediction: {e}")
