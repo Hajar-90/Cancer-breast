@@ -1,24 +1,17 @@
 import streamlit as st
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
 
 # Load CNN model with error handling
 model_loaded = False
 try:
-    cnn_model = load_model('oneone.keras')
+    cnn_model = tf.keras.models.load_model('oneone.keras')
     model_loaded = True
 except Exception as e:
     st.error(f"Error loading model: {e}")
 
 # Main Streamlit app
-st.set_page_config(
-    page_title="Breast Cancer Classification",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
 st.title('Breast Cancer Classification')
 uploaded_file = st.file_uploader("Upload a Mammogram Image", type=["jpg", "jpeg", "png", "pgm"])
 
